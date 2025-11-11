@@ -1386,7 +1386,250 @@ button:focus-visible {
 .shimmer{width:100%;height:10px;border-radius:8px;background:linear-gradient(90deg,#f4f6fb 25%,#edf1fb 37%,#f4f6fb 63%);background-size:400% 100%;animation:shimmer 1.2s ease-in-out infinite}
 @keyframes shimmer{0%{background-position:100% 0}100%{background-position:0 0}}
 
+/* ===== Admin Login Responsive ===== */
+.admin-wrap {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(12px, 3vw, 24px);
+}
 
+.admin-shell{
+  width: min(980px, 96vw);
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 18px;
+  align-items: stretch;
+}
+
+/* ซีกซ้าย: โลโก้/ภาพ */
+.brand-side{
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f5f7ff, #eef2ff);
+  border: 1px solid #e5eaf6;
+  display: grid;
+  place-items: center;
+  padding: clamp(14px, 3vw, 22px);
+}
+.brand-side img{
+  max-width: 80%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 10px 20px rgba(16,24,40,.12));
+}
+
+/* ฟอร์ม */
+.login-side{ display: grid; place-items: center; }
+.login-card{
+  width: min(520px, 100%);
+  background: #fff;
+  border: 1px solid #e5eaf6;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(16,24,40,.08);
+  padding: clamp(16px, 3.5vw, 26px);
+  display: grid;
+  gap: 12px;
+}
+
+.avatar{
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: #eef4ff;
+  display: grid; place-items: center;
+  margin: 0 auto 2px;
+}
+.avatar svg{ width: 34px; height: 34px; stroke: #2743a8; fill: none; stroke-width: 1.6; }
+
+.welcome{
+  margin: 0 0 2px;
+  text-align: center;
+  font-size: clamp(18px, 2.6vw, 22px);
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.field{
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  align-items: center;
+  background: #f7f9ff;
+  border: 1px solid #e5eaf6;
+  border-radius: 12px;
+  padding: 2px 6px 2px 8px;
+}
+.field-icon{
+  width: 36px; height: 36px;
+  display: grid; place-items: center;
+  color: #445;
+}
+.field-icon svg{ width: 20px; height: 20px; fill: none; stroke: #475569; stroke-width: 1.6; }
+
+.field input{
+  width: 100%;
+  height: 44px;              /* touch target มือถือ */
+  border: 0; outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 16px;           /* ป้องกัน iOS zoom */
+  padding: 0 8px;
+}
+
+/* ปุ่ม */
+.btn-block{ width: 100%; }
+.btn-beige{
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid #d7c9ad;
+  background: linear-gradient(180deg, #fde8c8, #f5d7a2);
+  color: #3a2f17; font-weight: 800;
+  cursor: pointer;
+}
+.btn-beige:hover{ filter: brightness(1.02); }
+
+.btn-home{
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #e5eaf6;
+  background: #fff;
+  color: #0f172a; font-weight: 700;
+}
+
+/* Error */
+.admin-error.soft{
+  background: #fff1f3;
+  border: 1px solid #ffd3dc;
+  color: #7f1025;
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+
+/* ===== Breakpoints ===== */
+@media (max-width: 860px){
+  .admin-shell{ grid-template-columns: 1fr; gap: 14px; }
+  .brand-side{ display: none; }     /* ซ่อนภาพซ้ายบนมือถือ */
+  .login-card{ border-radius: 16px; }
+}
+
+@media (max-width: 380px){
+  .field{ grid-template-columns: 36px 1fr; }
+  .field input{ height: 42px; }
+  .btn-beige{ height: 44px; }
+}
+
+/* ===== Admin Login (mobile-first) ===== */
+:root{
+  --ink:#0f172a; --muted:#475569;
+  --border:#e5eaf6; --card:#fff;
+  --bg1:#f5f7ff; --bg2:#eef2ff;
+  --shadow:0 10px 30px rgba(16,24,40,.08);
+}
+
+.admin-wrap{
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  background: radial-gradient(60rem 30rem at 15% -10%, #e7efff 0%, transparent 60%),
+              radial-gradient(50rem 25rem at 110% -10%, #f4f0ff 0%, transparent 60%),
+              linear-gradient(#f8fbff,#f3f6ff);
+  padding:clamp(12px,4vw,24px);
+}
+
+/* base shell: desktop = 2 คอลัมน์, mobile จะปรับด้านล่าง */
+.admin-shell{
+  width:min(980px,96vw);
+  display:grid;
+  grid-template-columns:1.1fr 1fr;
+  gap:18px;
+  align-items:stretch;
+}
+
+/* โลโก้ (แสดงทุกขนาดจอ) */
+.brand-side{
+  border-radius:18px;
+  background:linear-gradient(180deg,var(--bg1),var(--bg2));
+  border:1px solid var(--border);
+  display:grid; place-items:center;
+  padding:clamp(14px,3vw,22px);
+}
+.brand-side img{
+  width:100%;
+  max-width:220px; height:auto; display:block;
+  object-fit:contain;
+  filter:drop-shadow(0 10px 20px rgba(16,24,40,.12));
+}
+
+/* ฟอร์ม */
+.login-side{ display:grid; place-items:center; }
+.login-card{
+  width:min(520px,100%);
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  padding:clamp(16px,3.5vw,26px);
+  display:grid; gap:12px;
+}
+
+.avatar{
+  width:64px;height:64px;border-radius:50%;
+  background:#eef4ff; display:grid; place-items:center;
+  margin:0 auto 2px;
+}
+.avatar svg{ width:34px;height:34px; stroke:#2743a8; fill:none; stroke-width:1.6; }
+
+.welcome{
+  margin:0 0 2px; text-align:center;
+  font-size:clamp(18px,2.6vw,22px); font-weight:800; color:var(--ink);
+}
+
+.field{
+  display:grid; grid-template-columns:40px 1fr; align-items:center;
+  background:#f7f9ff; border:1px solid var(--border);
+  border-radius:12px; padding:2px 6px 2px 8px;
+}
+.field-icon{ width:36px;height:36px; display:grid; place-items:center; color:#445; }
+.field-icon svg{ width:20px;height:20px; fill:none; stroke:#475569; stroke-width:1.6; }
+.field input{
+  width:100%; height:44px; border:0; outline:0; background:transparent;
+  font:inherit; font-size:16px; padding:0 8px; color:var(--ink);
+}
+
+/* ปุ่ม */
+.btn-block{ width:100%; }
+.btn-beige{
+  height:46px; border-radius:12px;
+  border:1px solid #d7c9ad;
+  background:linear-gradient(180deg,#fde8c8,#f5d7a2);
+  color:#3a2f17; font-weight:800; cursor:pointer;
+}
+.btn-beige:hover{ filter:brightness(1.02); }
+.btn-home{
+  height:44px; border-radius:12px;
+  border:1px solid var(--border); background:#fff;
+  color:var(--ink); font-weight:700; cursor:pointer;
+}
+
+/* error */
+.admin-error.soft{
+  background:#fff1f3; border:1px solid #ffd3dc;
+  color:#7f1025; border-radius:12px; padding:8px 10px;
+}
+
+/* ===== Responsive ===== */
+/* tablet & down: โลโก้ย้ายไปอยู่บนฟอร์ม, ขนาดย่อ */
+@media (max-width: 860px){
+  .admin-shell{ grid-template-columns:1fr; gap:14px; }
+  .brand-side{ order:-1; background:transparent; border:0; padding:8px 0 0; }
+  .brand-side img{ max-width:140px; margin:6px auto 0; }
+  .login-card{ border-radius:16px; }
+}
+/* very small phones */
+@media (max-width: 380px){
+  .brand-side img{ max-width:120px; }
+  .field{ grid-template-columns:36px 1fr; }
+  .field input{ height:42px; }
+  .btn-beige{ height:44px; }
+}
 
 
 
