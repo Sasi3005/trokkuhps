@@ -143,10 +143,45 @@ export default function AdminBookings() {
     }
   }
 
+  // ✅ ปุ่มทำงานตามสถานะ
   const b = filtered[currentIndex] || null;
   const setTab = (t) => { setSearchParams({ tab: t }); setCurrentIndex(0); };
 
-  const canAct = b && b.status === "pending";
+  const canActPending = b && b.status === "pending";
+  const canCancelApproved = b && b.status === "confirmed";
+
+  // ✅ ฟังก์ชันยกเลิกโต๊ะหลังอนุมัติ (คืนโต๊ะ + ลบ QR + เปลี่ยนสถานะเป็น cancelled)
+  async function cancelApprovedBooking(booking) {
+    if (!booking?.table) return showToast("ไม่พบเลขโต๊ะ", "err");
+    if (!confirm(`ยืนยันยกเลิกโต๊ะ ${booking.table} และยกเลิกการจองนี้หรือไม่?`)) return;
+
+    setActionBusy(true);
+    try {
+      // 1) แจ้งโต๊ะให้ยกเลิก/คืนโต๊ะ (ถ้าแบ็กเอนด์ยังไม่มี action "cancel" ใช้ "reject" ได้)
+      const res = await fetch(`${API_BASE}/tables/${booking.table}/decision`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel" }) // <-- เปลี่ยนเป็น "reject" หากฝั่ง server รองรับแค่นั้น
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await res.json(); // เผื่อมี payload แต่เราไม่จำเป็นต้องใช้อะไรเพิ่มตอนนี้
+
+      // 2) อัปเดตสถานะ booking เป็น cancelled
+      await updateStatus(booking.id, "cancelled", booking.table);
+
+      // 3) อัปเดต UI: ลบ QR code ออก (และจะไม่แสดงปุ่มยกเลิกเพราะไม่ใช่ confirmed แล้ว)
+      setRows(prev => prev.map(r =>
+        r.id === booking.id ? { ...r, qr_code: null } : r
+      ));
+
+      showToast("ยกเลิกโต๊ะและคืนโต๊ะเรียบร้อยแล้ว", "ok");
+    } catch (e) {
+      console.error("cancelApprovedBooking error:", e);
+      showToast(`ยกเลิกโต๊ะไม่สำเร็จ: ${e.message}`, "err");
+    } finally {
+      setActionBusy(false);
+    }
+  }
 
   return (
     <div className="admin-layout">
@@ -164,7 +199,6 @@ export default function AdminBookings() {
           <NavItem icon={LogoutIcon} label="ออกจากระบบ" onClick={logout} />
         </nav>
       </aside>
-
 
       <main className="ad-main">
         <header className="ad-header">
@@ -196,7 +230,6 @@ export default function AdminBookings() {
                   <div className="detail-row">
                     <div className="detail-title">
                       โต๊ะ: {b.table || "-"}{b.zone ? ` (${ZONE_TH[b.zone] || b.zone})` : ""}
-                      {/* แสดงป้ายสถานะเล็ก ๆ */}
                       <span className={`status-chip s-${b.status}`} style={{ marginLeft: 8 }}>
                         {STATUS_TH[b.status] || b.status}
                       </span>
@@ -215,7 +248,6 @@ export default function AdminBookings() {
                 <div className="slip-box" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   {slipSrc(b) && <img src={slipSrc(b)} alt="สลิป" style={{ marginBottom: 8, maxWidth: "100%" }} />}
 
-                  {/* QR code */}
                   {b?.qr_code && (
                     <>
                       <img src={b.qr_code} alt="QR code" style={{ marginBottom: 8, maxWidth: "220px" }} />
@@ -231,8 +263,8 @@ export default function AdminBookings() {
                   )}
                 </div>
 
-                {/* ✅ ปุ่มจะแสดงเฉพาะตอน pending */}
-                {canAct ? (
+                {/* 🔁 ปุ่มตามสถานะ */}
+                {canActPending ? (
                   <div className="detail-actions">
                     <button
                       className="btn-approve"
@@ -243,7 +275,6 @@ export default function AdminBookings() {
                         setActionBusy(true);
 
                         try {
-                          // 1️⃣ เรียก API decision เพื่อรับ QR code และ zone
                           const res = await fetch(`${API_BASE}/tables/${b.table}/decision`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -252,17 +283,15 @@ export default function AdminBookings() {
                           if (!res.ok) throw new Error(`HTTP ${res.status}`);
                           const data = await res.json();
 
-                          // 2️⃣ อัปเดต status ผ่าน updateStatus
                           await updateStatus(b.id, "confirmed", b.table);
 
-                          // 3️⃣ อัปเดต QR code และ zone ใน UI
                           setRows(prev => prev.map(r =>
                             r.id === b.id
                               ? {
-                                ...r,
-                                qr_code: data.qr_code,      // QR code จาก API
-                                zone: data.zone || r.zone   // zone ใหม่ถ้ามี
-                              }
+                                  ...r,
+                                  qr_code: data.qr_code,
+                                  zone: data.zone || r.zone
+                                }
                               : r
                           ));
 
@@ -279,8 +308,6 @@ export default function AdminBookings() {
                       {actionBusy ? "กำลังบันทึก..." : "อนุมัติ"}
                     </button>
 
-
-
                     <button
                       className="btn-reject"
                       disabled={actionBusy}
@@ -290,7 +317,6 @@ export default function AdminBookings() {
                         setActionBusy(true);
 
                         try {
-                          // 1️⃣ เรียก API decision เพื่อปฏิเสธโต๊ะ
                           const res = await fetch(`${API_BASE}/tables/${b.table}/decision`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -299,10 +325,8 @@ export default function AdminBookings() {
                           if (!res.ok) throw new Error(`HTTP ${res.status}`);
                           const data = await res.json();
 
-                          // 2️⃣ อัปเดต status ผ่าน updateStatus
                           await updateStatus(b.id, "cancelled", b.table);
 
-                          // 3️⃣ อัปเดต QR code และ zone ใน UI (กรณีปฏิเสธ จะลบ QR code)
                           setRows(prev => prev.map(r =>
                             r.id === b.id ? { ...r, qr_code: null, zone: data.zone || r.zone } : r
                           ));
@@ -319,7 +343,18 @@ export default function AdminBookings() {
                     >
                       {actionBusy ? "กำลังบันทึก..." : "ปฏิเสธ"}
                     </button>
-
+                  </div>
+                ) : canCancelApproved ? (
+                  <div className="detail-actions">
+                    <button
+                      className="btn-reject"
+                      disabled={actionBusy}
+                      onClick={() => cancelApprovedBooking(b)}
+                      type="button"
+                    >
+                      {actionBusy ? "กำลังยกเลิก..." : "ยกเลิกโต๊ะ (คืนโต๊ะ)"}
+                    </button>
+                    <span className="hint">จะคืนโต๊ะ ลบ QR และเปลี่ยนสถานะเป็น “ปฏิเสธแล้ว”</span>
                   </div>
                 ) : (
                   <div className="detail-actions muted">
@@ -336,8 +371,6 @@ export default function AdminBookings() {
             <div className="pager-info">{filtered.length === 0 ? "0/0" : `${currentIndex + 1}/${filtered.length}`}</div>
             <button className="pager-btn" disabled={currentIndex >= filtered.length - 1} onClick={() => setCurrentIndex(i => Math.min(filtered.length - 1, i + 1))} type="button">ถัดไป →</button>
           </div>
-
-
         </section>
       </main>
     </div>
