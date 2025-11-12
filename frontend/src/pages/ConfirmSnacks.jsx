@@ -177,7 +177,7 @@ export default function ConfirmSnacks() {
 
                 {paymentMethod === "พร้อมเพย์" && (
                   <div style={{ marginTop: 10, textAlign: "center" }}>
-                    <img src="/images/qr_promptpay.png" alt="QR พร้อมเพย์" style={{ maxWidth: 120 }} />
+                    <img src="/public/qr_promptpay.png" alt="QR พร้อมเพย์" style={{ maxWidth: 120 }} />
                     <div style={{ fontSize: 12, color: "var(--muted)" }}>สแกน QR เพื่อชำระเงิน</div>
                   </div>
                 )}
