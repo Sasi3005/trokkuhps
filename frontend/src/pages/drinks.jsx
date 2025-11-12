@@ -27,10 +27,30 @@ function pickDefaultTemp(base_prices = {}) {
   if (has("ปั่น")) return "ปั่น";
   return null;
 }
+function normText(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+function highlight(text, q) {
+  if (!q) return text;
+  const t = String(text || "");
+  const i = t.toLowerCase().indexOf(q.toLowerCase());
+  if (i === -1) return t;
+  return (
+    <>
+      {t.slice(0, i)}
+      <mark className="fd-mark">{t.slice(i, i + q.length)}</mark>
+      {t.slice(i + q.length)}
+    </>
+  );
+}
 
 export default function Drinks() {
   const navigate = useNavigate();
-  const [sp] = useSearchParams();
+  const [sp, setSp] = useSearchParams();
 
   // ใช้ table จาก query (ไม่บังคับต้องมี)
   const tableLabel = sp.get("table")?.trim() || "";
@@ -38,6 +58,32 @@ export default function Drinks() {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
   const [items, setItems]     = useState([]);
+
+  // === ค้นหา (เดบาวน์ + sync URL) ===
+  const initialQ = sp.get("q") ?? "";
+  const [query, setQuery] = useState(initialQ);
+  const [debouncedQ, setDebouncedQ] = useState(initialQ);
+  const qTimer = useRef(null);
+
+  useEffect(() => {
+    const now = sp.get("q") ?? "";
+    setQuery(now);
+    setDebouncedQ(now);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sp.get("q")]);
+
+  const onChangeQuery = (v) => {
+    setQuery(v);
+    if (qTimer.current) clearTimeout(qTimer.current);
+    qTimer.current = setTimeout(() => {
+      setDebouncedQ(v);
+      const next = new URLSearchParams(sp);
+      if (v) next.set("q", v);
+      else next.delete("q");
+      setSp(next, { replace: true });
+    }, 220);
+  };
+  const clearQuery = () => onChangeQuery("");
 
   // เก็บค่าโต๊ะก่อนหน้าไว้ตรวจการสแกนใหม่
   const prevTableRef = useRef(tableLabel);
@@ -60,7 +106,6 @@ export default function Drinks() {
           const tempDefault = d.default_temperature || pickDefaultTemp(base_prices);
           const imgSrc = d.image ? `data:image/png;base64,${d.image}` : "/images/drinks/placeholder.jpg";
 
-          // id เป็น string เสมอ + fallback
           const idRaw = d.id ?? d.drink_id ?? d.item_id ?? d.m_id ?? d.menu_id;
           const id = (idRaw !== null && idRaw !== undefined && idRaw !== "")
             ? String(idRaw)
@@ -160,6 +205,13 @@ export default function Drinks() {
       list.map((it) => (it.id !== id ? it : (it.base_prices?.[temp] != null ? { ...it, temp } : it)))
     );
 
+  /* ----- Filtered list ----- */
+  const filtered = useMemo(() => {
+    const q = normText(debouncedQ);
+    if (!q) return items;
+    return items.filter((it) => normText(it.name).includes(q));
+  }, [items, debouncedQ]);
+
   /* ----- Summary + navigate ----- */
   const cartCount = useMemo(() => items.reduce((s, it) => s + (it.qty || 0), 0), [items]);
   const cartTotal = useMemo(
@@ -193,7 +245,7 @@ export default function Drinks() {
     });
   };
 
-  /* ----- UI (mapped to Foods.css classes) ----- */
+  /* ----- UI ----- */
   return (
     <div className="fd-page">
       {/* Topbar */}
@@ -209,9 +261,32 @@ export default function Drinks() {
         </button>
       </header>
 
-      {/* Content */}
       <main className="fd-container" role="main">
         <h2 className="fd-sectionTitle">เมนูเครื่องดื่ม</h2>
+
+        {/* ===== Search Bar ===== */}
+        <div className="fd-searchWrap" role="search">
+          <span className="fd-searchIcon" aria-hidden>🔎</span>
+          <input
+            className="fd-search"
+            value={query}
+            onChange={(e) => onChangeQuery(e.target.value)}
+            placeholder="ค้นหาเครื่องดื่ม เช่น “กาแฟ”, “ชา”, “โกโก้”…"
+            aria-label="ค้นหาเครื่องดื่ม"
+            inputMode="search"
+          />
+          {query && (
+            <button className="fd-clearBtn" onClick={clearQuery} aria-label="ล้างคำค้น">✕</button>
+          )}
+        </div>
+
+        {!loading && (
+          <div className="fd-resultMeta" aria-live="polite">
+            {debouncedQ
+              ? <>ผลลัพธ์ <b>{filtered.length}</b> รายการ สำหรับ “{debouncedQ}”</>
+              : <>ทั้งหมด <b>{items.length}</b> รายการ</>}
+          </div>
+        )}
 
         {error && <div className="fd-error" role="alert">❌ โหลดข้อมูลล้มเหลว: {error}</div>}
 
@@ -230,9 +305,9 @@ export default function Drinks() {
               </li>
             ))}
           </ul>
-        ) : (
+        ) : filtered.length ? (
           <ul className="fd-grid">
-            {items.map((it) => {
+            {filtered.map((it) => {
               const price = unitPrice(it);
               return (
                 <li key={`dr-${it.id}`} className="fd-card">
@@ -251,20 +326,13 @@ export default function Drinks() {
                   </div>
 
                   <div className="fd-info">
-                    <h3 className="fd-name" title={it.name}>{it.name}</h3>
+                    <h3 className="fd-name" title={it.name}>{highlight(it.name, debouncedQ)}</h3>
                     <div className="fd-price">{price.toFixed(2)} ฿</div>
 
-                    {/* อุณหภูมิ — ใช้สไตล์เบา ๆ เพื่อเข้ากับธีม (ไม่มีใน Foods.css) */}
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: ".5rem",
-                        marginTop: ".55rem",
-                        flexWrap: "wrap",
-                      }}
-                    >
+                    {/* อุณหภูมิ */}
+                    <div style={{ display: "flex", gap: ".5rem", marginTop: ".55rem", flexWrap: "wrap" }}>
                       {TEMP_KEYS.map((t) => {
-                        const hasPrice = it.base_prices?.[t] != null; // 0 ได้
+                        const hasPrice = it.base_prices?.[t] != null;
                         const active = it.temp === t;
                         return (
                           <button
@@ -274,11 +342,7 @@ export default function Drinks() {
                             disabled={!hasPrice}
                             aria-pressed={active}
                             aria-label={`${it.name} – ${t}`}
-                            title={
-                              hasPrice
-                                ? `${t} (${Number(it.base_prices[t]).toFixed(0)} ฿)`
-                                : `ไม่มีราคา ${t}`
-                            }
+                            title={hasPrice ? `${t} (${Number(it.base_prices[t]).toFixed(0)} ฿)` : `ไม่มีราคา ${t}`}
                             style={{
                               padding: ".35rem .6rem",
                               borderRadius: "999px",
@@ -308,6 +372,13 @@ export default function Drinks() {
               );
             })}
           </ul>
+        ) : (
+          <div className="fd-empty">
+            <div className="fd-emptyEmoji" aria-hidden>🥤</div>
+            <div className="fd-emptyTitle">ไม่พบเครื่องดื่มที่ตรงกับ “{debouncedQ}”</div>
+            <div className="fd-emptyHint">ลองพิมพ์ให้สั้นลง เช่น “กาแฟ”, “ชา”, “นม” หรือกดล้างคำค้น</div>
+            <button className="fd-emptyBtn" onClick={clearQuery}>แสดงทั้งหมด</button>
+          </div>
         )}
       </main>
 

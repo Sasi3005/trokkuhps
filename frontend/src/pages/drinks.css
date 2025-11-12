@@ -302,3 +302,74 @@ body {
   .fd-listWrap{ width: 100%; }
   .fd-form{ width: 100%; }
 }
+/* ===== Search bar (เหมือนหน้า Foods) ===== */
+.fd-searchWrap{
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .5rem;
+  margin: .25rem .25rem 1rem;
+}
+.fd-search{
+  width: 100%;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 0 40px 0 40px;
+  font: inherit;
+  box-shadow: var(--shadow);
+}
+.fd-search:focus{ outline: 2px solid #cfe0ff; border-color: #bcd0ff; }
+.fd-searchIcon{
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+  opacity: .7;
+}
+.fd-clearBtn{
+  position: absolute;
+  right: 10px;
+  height: 28px; width: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--chip);
+  cursor: pointer;
+  display: grid; place-items: center;
+  font-size: 14px; line-height: 1;
+}
+.fd-clearBtn:hover{ filter: brightness(1.03); }
+
+.fd-resultMeta{
+  margin: -4px .25rem .6rem;
+  font-size: .9rem;
+  color: var(--muted);
+}
+
+/* ไฮไลต์คำค้น */
+.fd-mark{
+  background: #fff3a3;
+  padding: 0 .15em;
+  border-radius: 4px;
+}
+
+/* Empty state */
+.fd-empty{
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 26px 20px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+.fd-emptyEmoji{ font-size: 34px; margin-bottom: 8px; }
+.fd-emptyTitle{ font-weight: 800; margin-bottom: 4px; color: var(--ink); }
+.fd-emptyHint{ color: var(--muted); font-size: .95rem; margin-bottom: 10px; }
+.fd-emptyBtn{
+  height: 38px; padding: 0 12px;
+  border-radius: 10px;
+  border: 1px solid #2a5be4;
+  background: linear-gradient(180deg, var(--brand), var(--brand-600));
+  color: #fff; font-weight: 700; cursor: pointer;
+}

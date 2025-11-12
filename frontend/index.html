@@ -2,17 +2,76 @@
 <html lang="th">
   <head>
     <meta charset="UTF-8" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
 
     <title>เมนูอาหาร</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap" rel="stylesheet">
-    
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- DEBUG ERROR OVERLAY (ใส่ชั่วคราวเพื่อจับ error บน iPhone) -->
+    <script>
+      (function () {
+        function show(msg) {
+          var d = document.createElement("div");
+          d.style.cssText =
+            "position:fixed;left:0;right:0;bottom:0;z-index:999999;padding:12px 14px;font:14px/1.45 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Arial,sans-serif;background:#ffebe9;color:#cf222e;border-top:2px solid #cf222e;white-space:pre-wrap;max-height:45vh;overflow:auto;box-shadow:0 -6px 16px rgba(0,0,0,.15)";
+          d.textContent = "App crashed:\n" + msg;
+          document.body.appendChild(d);
+        }
+        window.addEventListener("error", function (e) {
+          show(
+            (e.message || "Unknown error") +
+              "\n" +
+              (e.filename || "") +
+              " @" +
+              (e.lineno || 0) +
+              ":" +
+              (e.colno || 0)
+          );
+        });
+        window.addEventListener("unhandledrejection", function (e) {
+          var r = e.reason || {};
+          show((r.stack || r.message || String(r)));
+        });
+      })();
+    </script>
+    <!-- /DEBUG ERROR OVERLAY -->
+    <style>
+      /* กันจอกระชากขณะโหลดฟอนต์ */
+      html, body, #root { height: 100%; }
+      body {
+        margin: 0;
+        font-family: "Kanit", system-ui, -apple-system, Segoe UI, Roboto, Arial,
+          sans-serif;
+        background: linear-gradient(180deg, #eef5ff, #ffffff);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      noscript {
+        display: block;
+        padding: 12px 14px;
+        background: #fff7cc;
+        color: #7a6400;
+        border-bottom: 1px solid #e5d48a;
+        font-size: 14px;
+      }
+    </style>
   </head>
+
   <body>
+    <noscript>กรุณาเปิดใช้งาน JavaScript เพื่อใช้งานเว็บไซต์นี้</noscript>
     <div id="root"></div>
+
+    <!-- Entry ของ Vite/React -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
