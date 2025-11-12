@@ -5,6 +5,8 @@ const Tables = require("../models/tableModel");
 const Orders = require("../models/orderModel");
 
 const validZones = ["โซนในร้าน", "โซนนอกร้าน"];
+const FRONTEND_URL = process.env.FRONTEND_URL;
+
 
 module.exports = {
   async getAllTables(_req, res) {
@@ -99,47 +101,61 @@ module.exports = {
   },
 
   async approveOrRejectTable(req, res) {
-  try {
-    const { tableNumber } = req.params;
-    const { action } = req.body;
+    try {
+      const { tableNumber } = req.params;
+      const { action, page } = req.body; // page: 'foods', 'drinks', 'snacks', ฯลฯ
 
-    const t = await Tables.getByNumber(tableNumber);
-    if (!t) return res.status(404).json({ message: "ไม่พบโต๊ะนี้" });
+      const t = await Tables.getByNumber(tableNumber);
+      if (!t) return res.status(404).json({ message: "ไม่พบโต๊ะนี้" });
 
-    if (action === "approve") {
-      const url = `http://localhost:5173/order?tableId=${t.table_id}`;
-      const qrDataUrl = await QRCode.toDataURL(url);
-      const expire = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      if (action === "approve") {
 
-      // ✅ เปลี่ยนสถานะเป็นกำลังใช้งาน + สร้าง QR
-      await Tables.update(t.table_id, {
-        status: "กำลังใช้งาน",
-        qr_code: qrDataUrl,
-        qr_expire: expire
-      });
+        // ดึง IP เครื่องจริง
+        const nets = require("os").networkInterfaces();
+        let localIp = "localhost";
+        for (const name of Object.keys(nets)) {
+          for (const net of nets[name]) {
+            if (net.family === "IPv4" && !net.internal) {
+              localIp = net.address;
+            }
+          }
+        }
 
-      return res.json({
-        message: `อนุมัติโต๊ะ ${tableNumber} แล้ว`,
-        status: "กำลังใช้งาน",
-        qr_code: qrDataUrl,
-        expire
-      });
+        const url = `${process.env.FRONTEND_URL}/order?tableId=${t.table_id}`;
+
+        const qrDataUrl = await QRCode.toDataURL(url);
+        const expire = new Date(Date.now() + 2 * 60 * 60 * 1000);
+
+        // เปลี่ยนสถานะเป็นกำลังใช้งาน + สร้าง QR
+        await Tables.update(t.table_id, {
+          status: "กำลังใช้งาน",
+          qr_code: qrDataUrl,
+          qr_expire: expire
+        });
+
+        return res.json({
+          message: `อนุมัติโต๊ะ ${tableNumber} แล้ว`,
+          status: "กำลังใช้งาน",
+          qr_code: qrDataUrl,
+          expire,
+          url
+        });
+      }
+
+      if (action === "reject") {
+        await Tables.clearQRCode(t.table_id);
+        await Tables.setStatusByNumber(tableNumber, "ว่าง");
+
+        return res.json({
+          message: `ปฏิเสธโต๊ะ ${tableNumber} แล้ว (สถานะ: ว่าง)`,
+          status: "ว่าง"
+        });
+      }
+
+      res.status(400).json({ message: "action ต้องเป็น approve หรือ reject เท่านั้น" });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
     }
-
-    if (action === "reject") {
-      await Tables.clearQRCode(t.table_id);
-      await Tables.setStatusByNumber(tableNumber, "ว่าง");
-
-      return res.json({
-        message: `ปฏิเสธโต๊ะ ${tableNumber} แล้ว (สถานะ: ว่าง)`,
-        status: "ว่าง"
-      });
-    }
-
-    res.status(400).json({ message: "action ต้องเป็น approve หรือ reject เท่านั้น" });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
   }
-}
 };
 
