@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 
 // Pages
 import Booking from "./pages/booking";
@@ -68,12 +68,11 @@ function HealthBadge() {
         const res = await fetch(`${API_BASE}/healthz`, {
           signal: abort.signal,
           credentials: "include",
-          headers: { "Accept": "application/json" },
+          headers: { Accept: "application/json" },
         });
         let body = {};
         try { body = await res.json(); } catch {}
         setState({ ok: res.ok, msg: `OK ${res.status} @ ${API_BASE}`, code: res.status });
-        // แสดงใน console เผื่อดีบัก
         console.log("HEALTHZ:", res.status, body);
       } catch (e) {
         setState({ ok: false, msg: `FAIL: ${e?.message || e}`, code: 0 });
@@ -98,7 +97,7 @@ function HealthBadge() {
     backdropFilter: "blur(6px)",
     WebkitBackdropFilter: "blur(6px)",
     maxWidth: "60vw",
-    lineHeight: 1.4
+    lineHeight: 1.4,
   };
 
   return (
@@ -297,6 +296,21 @@ function Home() {
 }
 
 /* ================================
+   /order alias → /drinks (แปลง tableId → table)
+================================ */
+function OrderAlias() {
+  const loc = useLocation();
+  const sp = new URLSearchParams(loc.search);
+  const table = sp.get("table") || sp.get("tableId");
+  const next = new URLSearchParams(loc.search);
+  if (table != null) {
+    next.set("table", table);
+    next.delete("tableId");
+  }
+  return <Navigate to={{ pathname: "/drinks", search: `?${next.toString()}` }} replace />;
+}
+
+/* ================================
    App (Routes)
 ================================ */
 export default function App() {
@@ -304,6 +318,9 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/" element={<Home />} />
+        {/* รองรับลิงก์ QR เก่า /order?tableId=xx */}
+        <Route path="/order" element={<OrderAlias />} />
+
         <Route path="/booking" element={<Booking />} />
         <Route path="/confirm" element={<ConfirmBooking />} />
         <Route path="/drinks" element={<Drinks />} />
