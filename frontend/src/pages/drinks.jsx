@@ -9,6 +9,9 @@ const API = import.meta.env?.VITE_API_BASE || "http://localhost:5000";
 const cartKey = (table) => `dr_cart_${table || "unknown"}`;
 const selectedKey = (table) => `${cartKey(table)}_selected`;
 
+// ✅ อ่านเลขโต๊ะจาก URL ได้ทั้ง ?table= และ ?tableId=
+const getTableFromParams = (sp) => (sp.get("table") || sp.get("tableId") || "").trim();
+
 function norm(v) {
   if (v === null || v === undefined || v === "") return null;
   const n = Number(v);
@@ -52,8 +55,8 @@ export default function Drinks() {
   const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
 
-  // ใช้ table จาก query (ไม่บังคับต้องมี)
-  const tableLabel = sp.get("table")?.trim() || "";
+  // ✅ ใช้ table จาก query (รองรับ tableId ด้วย)
+  const tableLabel = getTableFromParams(sp);
 
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
@@ -275,9 +278,9 @@ export default function Drinks() {
             aria-label="ค้นหาเครื่องดื่ม"
             inputMode="search"
           />
-          {query && (
-            <button className="fd-clearBtn" onClick={clearQuery} aria-label="ล้างคำค้น">✕</button>
-          )}
+        {query && (
+          <button className="fd-clearBtn" onClick={clearQuery} aria-label="ล้างคำค้น">✕</button>
+        )}
         </div>
 
         {!loading && (

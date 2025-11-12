@@ -8,6 +8,9 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 const FOODS_API = `${API_BASE}/main_dishes`;
 const cartKey = (table) => `fd_cart_${table || "unknown"}`;
 
+// ✅ อ่านเลขโต๊ะจาก URL ได้ทั้ง ?table= และ ?tableId=
+const getTableFromParams = (sp) => (sp.get("table") || sp.get("tableId") || "").trim();
+
 // แปลงค่าตัวเลขให้ปลอดภัย
 function norm(v) {
   if (v === null || v === undefined || v === "") return null;
@@ -43,8 +46,8 @@ export default function Foods() {
   const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
 
-  // ✅ โต๊ะอ่านจาก query (ถ้ายังไม่สแกนให้ว่างได้)
-  const tableLabel = sp.get("table")?.trim() || "";
+  // ✅ โต๊ะอ่านจาก query (รองรับ tableId ด้วย)
+  const tableLabel = getTableFromParams(sp);
 
   // ====== โหลดรายการอาหาร ======
   const [loading, setLoading] = useState(true);

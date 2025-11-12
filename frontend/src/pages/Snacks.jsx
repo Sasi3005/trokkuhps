@@ -8,6 +8,9 @@ const SNACKS_API = `${API_BASE}/snacks`;
 const PLACEHOLDER = "/images/snacks/placeholder.jpg";
 const cartKey = (table) => `sn_cart_${table || "unknown"}`;
 
+// ✅ อ่านเลขโต๊ะจาก URL ได้ทั้ง ?table= และ ?tableId=
+const getTableFromParams = (sp) => (sp.get("table") || sp.get("tableId") || "").trim();
+
 const toNum = (v) => (Number.isFinite(Number(v)) ? Number(v) : 0);
 
 /* ===== helpers สำหรับค้นหา/รูป ===== */
@@ -44,7 +47,7 @@ function pickImageSrc(d) {
 export default function Snacks() {
   const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
-  const tableLabel = (sp.get("table") || "").trim();
+  const tableLabel = getTableFromParams(sp);
 
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(null);
