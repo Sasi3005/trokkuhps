@@ -1,4 +1,4 @@
-/* ====== Foods.css — Light Blue / Pastel Theme ====== */
+/* ====== Foods.css — Light Blue / Pastel Theme (Wide & iOS-safe) ====== */
 
 /* Core reset */
 * { box-sizing: border-box; }
@@ -11,6 +11,18 @@ body {
     radial-gradient(60rem 30rem at 120% -10%, #f0f6ff 0%, transparent 60%),
     linear-gradient(180deg, #f7faff 0%, #eef4ff 60%, #f7faff 100%);
   color: #162a3f; /* หมึกหลักเข้มอ่านชัด */
+  overflow-x: hidden;
+}
+
+/* iOS-friendly viewport height */
+.fd-page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-2);
+}
+@supports (height: 100dvh) {
+  .fd-page { min-height: 100dvh; }
 }
 
 /* Theme tokens (Light) */
@@ -34,13 +46,6 @@ body {
   --shadow: 0 6px 18px rgba(16,44,87,.08);
 }
 
-.fd-page {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: var(--surface-2);
-}
-
 /* Topbar */
 .fd-topbar{
   position: sticky;
@@ -54,7 +59,6 @@ body {
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
-
 .fd-back{
   height: 40px; width: 40px;
   border-radius: 50%;
@@ -66,7 +70,6 @@ body {
   font-size: 22px; line-height: 40px;
 }
 .fd-back:hover{ filter: brightness(1.05); }
-
 .fd-title{
   text-align: center;
   display: grid; place-items: center;
@@ -74,7 +77,6 @@ body {
 }
 .fd-title span{ font-size: .8rem; color: var(--muted); }
 .fd-title strong{ font-size: 1.05rem; color: var(--ink); }
-
 .fd-cartBtn{
   position: relative;
   height: 40px; width: 40px;
@@ -98,13 +100,20 @@ body {
   font-size: .75rem; font-weight: 700;
 }
 
-/* Container */
+/* Container: กว้างขึ้นบนจอใหญ่ */
 .fd-container{
   width: min(1100px, 92vw);
   margin: 0 auto;
   padding: 1rem .5rem 5.5rem;
 }
+@media (min-width: 1440px){
+  .fd-container{ width: min(1600px, 96vw); }
+}
+@media (min-width: 1680px){
+  .fd-container{ width: min(1920px, 98vw); }
+}
 
+/* Section title */
 .fd-sectionTitle{
   margin: .25rem .25rem 1rem;
   font-size: 1.15rem;
@@ -122,13 +131,22 @@ body {
   margin-bottom: 1rem;
 }
 
-/* Grid */
+/* Grid: ปรับให้เพิ่มคอลัมน์ตามความกว้าง */
 .fd-grid{
   list-style: none;
   display: grid;
-  grid-template-columns: repeat( auto-fill, minmax(230px, 1fr) );
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 14px;
   padding: 0;
+}
+@media (min-width: 1440px){
+  .fd-grid{ grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+}
+@media (min-width: 1680px){
+  .fd-grid{ grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+}
+@media (min-width: 2000px){
+  .fd-grid{ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 }
 
 /* Card */
@@ -143,10 +161,8 @@ body {
   transition: transform .16s ease, box-shadow .16s ease;
 }
 .fd-card:hover{ transform: translateY(-2px); }
-
 .fd-thumbWrap{ background: #f2f6ff; display: grid; place-items: center; }
 .fd-thumb{ width: 100%; height: 150px; object-fit: cover; display: block; }
-
 .fd-info{ padding: .8rem .9rem .1rem; }
 .fd-name{
   font-size: 1rem;
@@ -177,7 +193,7 @@ body {
 .fd-circle:hover{ filter: brightness(1.03); }
 .fd-qty{ text-align: center; color: var(--accent); font-weight: 700; }
 
-/* Bottom confirm bar */
+/* Bottom confirm bar (safe-area) */
 .fd-bottom{
   position: sticky;
   bottom: 0; left: 0; right: 0;
@@ -185,7 +201,7 @@ body {
   transform: translateY(110%);
   opacity: 0;
   transition: transform .22s ease, opacity .22s ease;
-  padding: .65rem .9rem .85rem;
+  padding: .65rem .9rem calc(.85rem + env(safe-area-inset-bottom));
   background: rgba(255,255,255,.9);
   backdrop-filter: blur(10px);
   border-top: 1px solid var(--border);
@@ -224,28 +240,26 @@ body {
   animation: shimmer 1.2s infinite;
 }
 @keyframes shimmer { to { transform: translateX(100%); } }
-
 .fd-skeleton{ grid-template-rows: 150px auto 60px; }
 .sk-line{ height: 12px; margin: 10px 0; background: #e6eeff; }
 .sk-1{ width: 70%; } .sk-2{ width: 45%; }
 .sk-pill{ width: 100%; height: 36px; border-radius: 999px; background: #e6eeff; }
 
-/* Responsive */
+/* Responsive: phones default 2 columns */
 @media (max-width: 520px){
   .fd-container{ padding-left: .75rem; padding-right: .75rem; }
   .fd-grid{ grid-template-columns: repeat( auto-fill, minmax(180px, 1fr) ); }
 }
-/* ===== Compact list wrapper (จำกัดความกว้างเพื่อไม่ให้ยืดเต็มจอ) ===== */
-.fd-listWrap { width: min(860px, 100%); margin: 0 auto; }
 
-/* ===== Compact horizontal list for Confirm page ===== */
+/* Compact list wrapper / confirm page */
+.fd-listWrap { width: min(1120px, 98vw); margin: 0 auto; } /* กว้างขึ้น */
+
+/* Compact horizontal list */
 .fd-list{ list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .fd-list--compact{ grid-template-columns: 1fr; }
-
-/* การ์ดแนวนอนขนาดกะทัดรัด */
 .fd-card--h{
   display: grid;
-  grid-template-columns: 80px 1fr 36px; /* รูป | เนื้อหา | ปุ่มลบ */
+  grid-template-columns: 80px 1fr 36px;
   align-items: center;
   gap: 10px;
   padding: 10px;
@@ -265,9 +279,9 @@ body {
 .fd-remove{ justify-self: end; }
 .fd-circle--sm{ width: 32px; height: 32px; font-size: 18px; }
 
-/* ===== Compact form (Note + Payment) ===== */
+/* Compact form (Note + Payment) */
 .fd-form{
-  width: min(820px, 100%);
+  width: min(1120px, 98vw);  /* กว้างขึ้น */
   margin: 8px auto 12px;
   display: grid;
   gap: 10px;
@@ -295,159 +309,109 @@ body {
 .fd-select--sm{ height: 38px; }
 .fd-actionsRow{ display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
-/* Responsive tweaks */
 @media (max-width: 520px){
   .fd-card--h{ grid-template-columns: 72px 1fr 32px; padding: 8px; }
   .fd-thumb--sm{ width: 72px; height: 72px; }
   .fd-listWrap{ width: 100%; }
   .fd-form{ width: 100%; }
 }
-/* === Phones: always 2 cards per row === */
-@media (max-width: 540px){
-  /* ลด padding ขอบ ๆ ให้พอใส่ 2 ใบ */
-  .fd-container{ padding-left: 10px; padding-right: 10px; }
 
-  /* บังคับ 2 คอลัมน์เสมอ (แทน auto-fill/minmax เดิม) */
+/* Phones: force 2 cards per row + compact */
+@media (max-width: 540px){
+  .fd-container{ padding-left: 10px; padding-right: 10px; }
   .fd-grid{
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     gap: 10px;
   }
-
-  /* ทำการ์ดให้กระชับขึ้น */
-  .fd-card{
-    grid-template-rows: 120px auto auto; /* รูป | ชื่อ/ราคา | ปุ่ม + - */
-  }
+  .fd-card{ grid-template-rows: 120px auto auto; }
   .fd-thumb{ height: 120px; object-fit: cover; }
 }
 
-/* จอเล็กมาก 320px ก็ยัง 2 คอลัมน์ได้อยู่ */
+/* Very small phones */
 @media (max-width: 360px){
   .fd-grid{ gap: 8px; }
   .fd-card{ grid-template-rows: 110px auto auto; }
   .fd-thumb{ height: 110px; }
 }
-/* ===== Phone compact: make cards shorter and tidy ===== */
+
+/* Phone compact: shorter cards & tidy text */
 @media (max-width: 540px){
-  /* กริด 2 คอลัมน์เหมือนเดิม */
   .fd-grid{
     grid-template-columns: repeat(2, minmax(0,1fr)) !important;
     gap: 10px;
   }
-
-  /* การ์ดเตี้ยลง */
   .fd-card{
-    /* ใช้ความสูงตามเนื้อหา ไม่บังคับสูงเกิน */
     grid-template-rows: auto auto auto;
     border-radius: 14px;
   }
-
-  /* รูปเตี้ยลงและนิ่ง */
   .fd-thumbWrap{ background: #f2f6ff; }
   .fd-thumb{
-    height: 105px;             /* ↓ จาก 120–150px */
+    height: 105px;
     object-fit: cover;
     display: block;
   }
-
-  /* เนื้อหาแน่นขึ้น */
-  .fd-info{
-    padding: 8px 10px 4px;     /* ↓ ระยะห่าง */
-  }
+  .fd-info{ padding: 8px 10px 4px; }
   .fd-name{
     margin: 0 0 4px;
     font-size: 0.95rem;
-    white-space: nowrap;       /* ตัดให้ 1 บรรทัด */
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.2;
+    max-height: calc(1.2em * 2);
+    word-break: break-word;
+    overflow-wrap: anywhere;
   }
-  .fd-price{
-    font-size: 0.9rem;
-    line-height: 1;
-  }
-
-  /* แถบปุ่ม + – กระชับ */
+  .fd-price{ font-size: 0.9rem; line-height: 1; }
   .fd-ctrl{
     grid-template-columns: 32px 1fr 32px;
     gap: 6px;
-    padding: 8px 10px 10px;    /* ↓ padding ล่าง */
+    padding: 8px 10px 10px;
   }
-  .fd-circle{
-    width: 32px; height: 32px; font-size: 18px; line-height: 32px;
-  }
+  .fd-circle{ width: 32px; height: 32px; font-size: 18px; line-height: 32px; }
   .fd-qty{ font-size: 0.95rem; }
-
-  /* ถ้ามีปุ่มตัวเลือก (เช่น ร้อน/เย็น) ใช้ margin เล็ก ๆ */
-  .fd-options, .fd-chips{
-    margin: 6px 10px 0;        /* ปรับตามคลาสที่ใช้ */
-  }
+  .fd-options, .fd-chips{ margin: 6px 10px 0; }
 }
 
-/* จอเล็กมาก (<=360px): ลดอีกนิด */
-@media (max-width: 360px){
-  .fd-thumb{ height: 96px; }
-  .fd-ctrl{ padding: 6px 8px 8px; }
-}
-/* ===== Chips in one row on phones ===== */
-/* ใช้กับคอนเทนเนอร์ที่ห่อชิป เช่น .fd-chips หรือ .fd-options */
+/* Chips row: single-line with horizontal scroll */
 .fd-chips,
 .fd-options,
 .opts-row{
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;          /* ✅ ห้ามขึ้นบรรทัดใหม่ */
-  overflow-x: auto;           /* ถ้าไม่พอที่ ให้เลื่อนด้านข้างแทน */
+  flex-wrap: nowrap;
+  overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  padding-right: 2px;         /* กันป้ายชนขอบ */
+  padding-right: 2px;
 }
-
-/* ซ่อนสกอลล์บาร์แนวนอนให้ดูสะอาด */
 .fd-chips::-webkit-scrollbar,
 .fd-options::-webkit-scrollbar,
 .opts-row::-webkit-scrollbar { height: 0; }
-
-/* ตัวชิปเองให้ย่อพอดีบรรทัดเดียว */
 .fd-chip,
 .fd-option,
 ._chip{
-  white-space: nowrap;        /* ✅ อยู่บรรทัดเดียว */
+  white-space: nowrap;
   padding: 6px 12px;
   border-radius: 999px;
   font-weight: 700;
 }
-
-/* มือถือ: ทำให้กระชับขึ้นอีกนิดเพื่อให้ 3 ชิปวางได้ */
 @media (max-width: 540px){
-  .fd-chip,
-  .fd-option,
-  ._chip{ padding: 5px 10px; font-size: 0.9rem; }
+  .fd-chip, .fd-option, ._chip{ padding: 5px 10px; font-size: 0.9rem; }
 }
-/* ===== Phone: show full menu names (wrap 2 lines) ===== */
-@media (max-width: 540px){
-  .fd-info{
-    padding: 8px 10px 6px;
-  }
-  .fd-name{
-    /* จากเดิมที่เป็น 1 บรรทัด + ellipsis */
-    white-space: normal;               /* ✅ อนุญาตขึ้นบรรทัดใหม่ */
-    overflow: hidden;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;             /* ← เปลี่ยนเป็น 3 ถ้าอยากยาวกว่านี้ */
-    -webkit-box-orient: vertical;
-    line-height: 1.2;
-    max-height: calc(1.2em * 2);       /* ให้พอดีกับ 2 บรรทัด */
-    word-break: break-word;            /* ตัดคำไทย/อังกฤษยาว ๆ ได้ */
-    overflow-wrap: anywhere;           /* กันคำยาวชนขอบ */
-    margin: 0 0 6px;
-    font-size: 0.98rem;                /* อ่านง่ายขึ้นนิด */
-  }
-  .fd-price{
-    margin-top: 2px;
-    line-height: 1;
-  }
 
-  /* เผื่อบางการ์ดที่มีตัวเลือก/ปุ่ม ล้น ให้พื้นที่เผื่อด้านล่างนิด */
-  .fd-card{
-    grid-template-rows: auto auto auto;
+/* iOS emergency patch: ลด backdrop-filter ที่อาจทำให้หน้าขาว */
+@supports (-webkit-touch-callout: none) {
+  .fd-topbar, .fd-bottom {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: #ffffff !important;
   }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

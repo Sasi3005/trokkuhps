@@ -315,5 +315,3 @@ a, button { -webkit-tap-highlight-color: transparent; }
   text-overflow: ellipsis;
   margin-right: 0;            /* เผื่อมี margin เดิม */
 }
-.page { min-height: 100svh; }  /* แทน 100vh */
-.hero { min-height: 90svh; }

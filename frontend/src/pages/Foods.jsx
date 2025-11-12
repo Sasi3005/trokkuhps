@@ -18,7 +18,7 @@ export default function Foods() {
   const navigate = useNavigate();
   const [sp] = useSearchParams();
 
-  // ✅ โต๊ะอ่านจาก query เท่านั้น (ถ้ายังไม่สแกนให้ว่างได้)
+  // ✅ โต๊ะอ่านจาก query (ถ้ายังไม่สแกนให้ว่างได้)
   const tableLabel = sp.get("table")?.trim() || "";
 
   // ====== โหลดรายการอาหาร ======
@@ -105,7 +105,7 @@ export default function Foods() {
     [items]
   );
 
-  // ====== ไปหน้า Confirm (ไม่บังคับมีโต๊ะ) ======
+  // ====== ไปหน้า Confirm ======
   const goConfirm = () => {
     const selected = items.filter((it) => (it.qty || 0) > 0);
     if (!selected.length) {
@@ -155,8 +155,8 @@ export default function Foods() {
         </button>
       </header>
 
-      {/* Content */}
-      <main className="fd-container" role="main">
+      {/* Content — ใช้ container แบบกว้าง */}
+      <main className="fd-container fd-container--fluid" role="main">
         <h2 className="fd-sectionTitle">เมนูอาหาร</h2>
 
         {error && (
