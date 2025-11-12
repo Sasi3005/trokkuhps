@@ -31,6 +31,33 @@ import "./App.css";
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 /* ================================
+   Utils: พก table param ให้ทุกลิงก์
+================================ */
+function withTable(currentSearch, to) {
+  const out = typeof to === "string" ? { pathname: to } : { ...to };
+  const toQS  = new URLSearchParams(out.search || "");
+  const curQS = new URLSearchParams(currentSearch || "");
+  const table =
+    toQS.get("table") || toQS.get("tableId") ||
+    curQS.get("table") || curQS.get("tableId");
+
+  const next = new URLSearchParams(out.search || "");
+  if (table) {
+    next.set("table", table);
+    next.delete("tableId");
+    out.search = `?${next.toString()}`;
+  } else if (!out.search) delete out.search;
+
+  return out;
+}
+
+// Link ที่แนบ ?table= จาก URL ปัจจุบันให้อัตโนมัติ
+function KeepTableLink({ to, ...props }) {
+  const loc = useLocation();
+  return <Link to={withTable(loc.search, to)} {...props} />;
+}
+
+/* ================================
    Data (ตัวอย่างรูปจาก public/images)
 ================================ */
 const HEROES = [
@@ -164,10 +191,10 @@ function Home() {
 
           {/* Desktop nav */}
           <nav className="topnav" aria-label="เมนูหลัก">
-            <Link className="topnav__link" to="/foods">เมนูอาหาร</Link>
-            <Link className="topnav__link" to="/snacks">ของทานเล่น</Link>
-            <Link className="topnav__link" to="/drinks?table=A1">เครื่องดื่ม</Link>
-            <Link className="topnav__cta" to="/booking">จองโต๊ะ</Link>
+            <KeepTableLink className="topnav__link" to="/foods">เมนูอาหาร</KeepTableLink>
+            <KeepTableLink className="topnav__link" to="/snacks">ของทานเล่น</KeepTableLink>
+            <KeepTableLink className="topnav__link" to="/drinks">เครื่องดื่ม</KeepTableLink>
+            <KeepTableLink className="topnav__cta" to="/booking">จองโต๊ะ</KeepTableLink>
           </nav>
 
           {/* Mobile menu button */}
@@ -199,10 +226,10 @@ function Home() {
           <button className="drawer-close" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)} type="button">✕</button>
         </div>
         <nav className="mobile-drawer__nav">
-          <Link to="/foods" onClick={() => setMenuOpen(false)}>🍚 เมนูอาหาร</Link>
-          <Link to="/snacks" onClick={() => setMenuOpen(false)}>🍟 ของทานเล่น</Link>
-          <Link to="/drinks?table=A1" onClick={() => setMenuOpen(false)}>🥤 เครื่องดื่ม</Link>
-          <Link className="mobile-drawer__cta" to="/booking" onClick={() => setMenuOpen(false)}>จองโต๊ะ</Link>
+          <KeepTableLink to="/foods"  onClick={() => setMenuOpen(false)}>🍚 เมนูอาหาร</KeepTableLink>
+          <KeepTableLink to="/snacks" onClick={() => setMenuOpen(false)}>🍟 ของทานเล่น</KeepTableLink>
+          <KeepTableLink to="/drinks" onClick={() => setMenuOpen(false)}>🥤 เครื่องดื่ม</KeepTableLink>
+          <KeepTableLink className="mobile-drawer__cta" to="/booking" onClick={() => setMenuOpen(false)}>จองโต๊ะ</KeepTableLink>
         </nav>
       </div>
       {menuOpen && <div className="drawer-backdrop" onClick={() => setMenuOpen(false)} />}
@@ -235,8 +262,8 @@ function Home() {
             </h1>
             <p className="hero__price">เพียง <strong>{slide.price}</strong></p>
             <div className="hero__ctaRow">
-              <Link className="btn btn--primary" to="/foods">ดูเมนูอาหาร</Link>
-              <Link className="btn btn--ghost" to="/drinks?table=A1">สั่งเครื่องดื่ม</Link>
+              <KeepTableLink className="btn btn--primary" to="/foods">ดูเมนูอาหาร</KeepTableLink>
+              <KeepTableLink className="btn btn--ghost" to="/drinks">สั่งเครื่องดื่ม</KeepTableLink>
             </div>
           </div>
 
