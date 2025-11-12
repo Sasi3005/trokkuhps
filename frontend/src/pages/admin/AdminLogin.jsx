@@ -23,6 +23,7 @@ export default function AdminLogin() {
   const onSubmit = async (e) => {
     e.preventDefault();
     setErr("");
+
     const u = username.trim();
     const p = password.trim();
     if (!u || !p) return setErr("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
@@ -42,9 +43,9 @@ export default function AdminLogin() {
   if (loading) return null;
 
   return (
-    <div className="admin-wrap beige">
+    <div className="admin-wrap">
       <div className="admin-shell">
-        {/* โลโก้: แสดงทุกขนาดจอ (มือถือจะย้ายมาอยู่บนสุด) */}
+        {/* โลโก้ */}
         <div className="brand-side">
           <img
             src={logo}
@@ -79,6 +80,7 @@ export default function AdminLogin() {
                 autoComplete="username"
                 autoCapitalize="none"
                 disabled={submitting}
+                aria-label="Username"
               />
             </label>
 
@@ -96,13 +98,14 @@ export default function AdminLogin() {
                 placeholder="Password"
                 autoComplete="current-password"
                 disabled={submitting}
+                aria-label="Password"
               />
             </label>
 
             {err && <div className="admin-error soft">{err}</div>}
 
             <button
-              className="btn-beige btn-block"
+              className="btn-primary btn-block"
               type="submit"
               disabled={submitting || !username.trim() || !password.trim()}
             >
@@ -111,7 +114,7 @@ export default function AdminLogin() {
 
             <button
               type="button"
-              className="btn-home btn-block"
+              className="btn-ghost btn-block"
               onClick={() => (window.location.href = "/")}
             >
               ← กลับหน้าแรก
