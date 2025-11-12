@@ -1,6 +1,6 @@
 // src/pages/Drinks.jsx
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import "./drinks.css";
 
 const TEMP_KEYS=["ร้อน","เย็น","ปั่น"];
@@ -15,11 +15,54 @@ function pickDefaultTemp(p){ const has=k=>p?.[k]!==null&&p?.[k]!==undefined; if(
 const normText=(s)=>String(s||"").toLowerCase().normalize("NFKD").replace(/\s+/g," ").trim();
 const highlight=(text,q)=>{ if(!q) return text; const t=String(text||""); const i=t.toLowerCase().indexOf(q.toLowerCase()); if(i===-1) return t; return(<>{t.slice(0,i)}<mark className="fd-mark">{t.slice(i,i+q.length)}</mark>{t.slice(i+q.length)}</>); };
 
+/* แถบแจ้งเตือน */
+function NeedTableNotice() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  return (
+    <div
+      role="alert"
+      style={{
+        margin: "8px",
+        padding: "10px 12px",
+        borderRadius: 12,
+        background: "rgba(255, 230, 0, .12)",
+        border: "1px solid rgba(255, 200, 0, .6)",
+        color: "#7a5b00",
+        display: "flex",
+        gap: 12,
+        alignItems: "center",
+      }}
+    >
+      <span style={{ fontSize: 20 }}>🪑</span>
+      <div style={{ lineHeight: 1.35, flex: 1 }}>
+        <strong>ยังไม่มีหมายเลขโต๊ะ</strong> — กรุณาจองโต๊ะก่อนจึงจะสั่งได้ และ สแกน QR ที่พนักงาน
+      </div>
+      <button
+        type="button"
+        onClick={() => navigate("/booking", { state: { from: location, reason: "needTable" } })}
+        style={{
+          padding: "8px 12px",
+          borderRadius: 10,
+          border: "1px solid #d4b106",
+          background: "#fadb14",
+          fontWeight: 700,
+          cursor: "pointer",
+          whiteSpace: "nowrap",
+        }}
+      >
+        ไปจองโต๊ะ
+      </button>
+    </div>
+  );
+}
+
 export default function Drinks(){
   const navigate=useNavigate();
   const [sp,setSp]=useSearchParams();
   const tableLabel=getTableFromParams(sp);
   const qs = tableLabel ? `?table=${encodeURIComponent(tableLabel)}` : "";
+  const canOrder = !!tableLabel;
 
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(null);
@@ -81,15 +124,18 @@ export default function Drinks(){
 
   const unitPrice=(it)=>{ const base=it.base_prices?.[it.temp]!=null?Number(it.base_prices[it.temp]):0; return base+Number(it.extra_price??0); };
 
-  const dec=(id)=>setItems(list=>list.map(it=>it.id===id?{...it,qty:Math.max(0,it.qty-1)}:it));
-  const inc=(id)=>setItems(list=>list.map(it=>it.id===id?{...it,qty:it.qty+1}:it));
-  const setTemp=(id,temp)=>setItems(list=>list.map(it=>it.id!==id?it: (it.base_prices?.[temp]!=null?{...it,temp}:it)));
+  const dec=(id)=> canOrder && setItems(list=>list.map(it=>it.id===id?{...it,qty:Math.max(0,it.qty-1)}:it));
+  const inc=(id)=> canOrder && setItems(list=>list.map(it=>it.id===id?{...it,qty:it.qty+1}:it));
+  const setTemp=(id,temp)=> canOrder && setItems(list=>list.map(it=>it.id!==id?it: (it.base_prices?.[temp]!=null?{...it,temp}:it)));
 
   const filtered=useMemo(()=>{ const q=normText(debouncedQ); if(!q) return items; return items.filter(it=>normText(it.name).includes(q)); },[items,debouncedQ]);
   const cartCount=useMemo(()=>items.reduce((s,it)=>s+(it.qty||0),0),[items]);
   const cartTotal=useMemo(()=>items.reduce((s,it)=>s+unitPrice(it)*(it.qty||0),0),[items]);
 
-  const goCart=()=>{ const selected=items.filter(it=>(it.qty||0)>0); if(!selected.length){ alert("ยังไม่ได้เลือกเครื่องดื่ม"); return; }
+  const goCart=()=>{ 
+    if(!canOrder){ alert("กรุณาสแกน/จองโต๊ะก่อนครับ"); return; }
+    const selected=items.filter(it=>(it.qty||0)>0); 
+    if(!selected.length){ alert("ยังไม่ได้เลือกเครื่องดื่ม"); return; }
     try{
       sessionStorage.setItem(selectedKey(tableLabel), JSON.stringify(selected.map(x=>({...x,drink_id:String(x.id),price:unitPrice(x)}))));
       sessionStorage.setItem(cartKey(tableLabel), JSON.stringify(items));
@@ -100,12 +146,14 @@ export default function Drinks(){
   return (
     <div className="fd-page">
       <header className="fd-topbar" role="banner">
-        <button type="button" className="fd-back" onClick={()=>navigate("/"+qs)} aria-label="ย้อนกลับ">‹</button>
+        <button type="button" className="fd-back" onClick={()=>navigate(qs ? "/"+qs : "/")} aria-label="ย้อนกลับ">‹</button>
         <div className="fd-title"><span>หมายเลขโต๊ะ</span><strong>{tableLabel || "—"}</strong></div>
-        <button type="button" className="fd-cartBtn" onClick={goCart} aria-label="ไปตะกร้า">
+        <button type="button" className="fd-cartBtn" onClick={goCart} aria-label="ไปตะกร้า" disabled={!canOrder}>
           <span className="fd-cartIcon" aria-hidden>🧺</span><span className="fd-badge" aria-live="polite">{cartCount}</span>
         </button>
       </header>
+
+      {!canOrder && <NeedTableNotice />}
 
       <main className="fd-container" role="main">
         <h2 className="fd-sectionTitle">เมนูเครื่องดื่ม</h2>
@@ -134,23 +182,30 @@ export default function Drinks(){
                   <div className="fd-info">
                     <h3 className="fd-name" title={it.name}>{highlight(it.name,debouncedQ)}</h3>
                     <div className="fd-price">{price.toFixed(2)} ฿</div>
+
+                    {/* อุณหภูมิ (ล็อกเมื่อไม่มีโต๊ะ) */}
                     <div style={{display:"flex",gap:".5rem",marginTop:".55rem",flexWrap:"wrap"}}>
                       {TEMP_KEYS.map(t=>{
                         const has=it.base_prices?.[t]!=null; const active=it.temp===t;
                         return (
-                          <button key={t} type="button" onClick={()=>has&&setTemp(it.id,t)} disabled={!has} aria-pressed={active}
+                          <button key={t} type="button"
+                            onClick={()=>canOrder && has && setTemp(it.id,t)}
+                            disabled={!canOrder || !has}
+                            aria-pressed={active}
                             title={has?`${t} (${Number(it.base_prices[t]).toFixed(0)} ฿)`:`ไม่มีราคา ${t}`}
-                            style={{padding:".35rem .6rem",borderRadius:"999px",border:"1px solid var(--border)",background:active?"var(--brand)":"var(--chip)",color:active?"#fff":"var(--ink)",cursor:has?"pointer":"not-allowed",opacity:has?1:.5,fontWeight:700,boxShadow:"var(--shadow)",fontSize:".85rem"}}>
+                            style={{padding:".35rem .6rem",borderRadius:"999px",border:"1px solid var(--border)",background:active?"var(--brand)":"var(--chip)",color:active?"#fff":"var(--ink)",cursor:has&&canOrder?"pointer":"not-allowed",opacity:has&&canOrder?1:.5,fontWeight:700,boxShadow:"var(--shadow)",fontSize:".85rem"}}
+                          >
                             {t}
                           </button>
                         );
                       })}
                     </div>
                   </div>
+
                   <div className="fd-ctrl" aria-label={`ตัวควบคุมจำนวน ${it.name}`}>
-                    <button type="button" className="fd-circle" onClick={()=>dec(it.id)} aria-label={`ลด ${it.name}`}>–</button>
+                    <button type="button" className="fd-circle" onClick={()=>dec(it.id)} disabled={!canOrder} aria-label={`ลด ${it.name}`}>–</button>
                     <span className="fd-qty" aria-live="polite">{it.qty}</span>
-                    <button type="button" className="fd-circle" onClick={()=>inc(it.id)} aria-label={`เพิ่ม ${it.name}`}>+</button>
+                    <button type="button" className="fd-circle" onClick={()=>inc(it.id)} disabled={!canOrder} aria-label={`เพิ่ม ${it.name}`}>+</button>
                   </div>
                 </li>
               );
@@ -168,7 +223,7 @@ export default function Drinks(){
 
       <div className={`fd-bottom ${cartCount ? "show" : ""}`} role="region" aria-live="polite">
         <div className="fd-bottomInfo"><span className="fd-bottomCount">{cartCount} รายการ</span><span className="fd-bottomTotal">{cartTotal.toFixed(2)} ฿</span></div>
-        <button className="fd-bottomBtn" onClick={goCart}>ยืนยันออเดอร์</button>
+        <button className="fd-bottomBtn" onClick={goCart} disabled={!canOrder}>ยืนยันออเดอร์</button>
       </div>
     </div>
   );

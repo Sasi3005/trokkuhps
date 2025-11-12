@@ -1,6 +1,6 @@
 // src/pages/Snacks.jsx
 import { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import "./Snacks.css";
 
 const API_BASE=import.meta.env.VITE_API_BASE||"http://localhost:5000";
@@ -13,11 +13,54 @@ const normText=(s)=>String(s||"").toLowerCase().normalize("NFKD").replace(/\s+/g
 const highlight=(text,q)=>{ if(!q) return text; const t=String(text||""); const i=t.toLowerCase().indexOf(q.toLowerCase()); if(i===-1) return t; return(<>{t.slice(0,i)}<mark className="fd-mark">{t.slice(i,i+q.length)}</mark>{t.slice(i+q.length)}</>); };
 function pickImageSrc(d){ if(d?.image && typeof d.image==="string") return `data:image/png;base64,${d.image}`; const raw=d?.image_path??d?.img??d?.image_file??d?.imageUrl??d?.image??""; if(!raw) return PLACEHOLDER; if(/^https?:\/\//i.test(raw)) return raw; if(raw.startsWith("/uploads/")) return `${API_BASE}${raw}`; if(raw.startsWith("/")) return raw; return `${API_BASE}/uploads/${raw}`; }
 
+/* แถบแจ้งเตือน */
+function NeedTableNotice() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  return (
+    <div
+      role="alert"
+      style={{
+        margin: "8px",
+        padding: "10px 12px",
+        borderRadius: 12,
+        background: "rgba(255, 230, 0, .12)",
+        border: "1px solid rgba(255, 200, 0, .6)",
+        color: "#7a5b00",
+        display: "flex",
+        gap: 12,
+        alignItems: "center",
+      }}
+    >
+      <span style={{ fontSize: 20 }}>🪑</span>
+      <div style={{ lineHeight: 1.35, flex: 1 }}>
+        <strong>ยังไม่มีหมายเลขโต๊ะ</strong> — กรุณาจองโต๊ะก่อนจึงจะสั่งได้ และ สแกน QR ที่พนักงาน
+      </div>
+      <button
+        type="button"
+        onClick={() => navigate("/booking", { state: { from: location, reason: "needTable" } })}
+        style={{
+          padding: "8px 12px",
+          borderRadius: 10,
+          border: "1px solid #d4b106",
+          background: "#fadb14",
+          fontWeight: 700,
+          cursor: "pointer",
+          whiteSpace: "nowrap",
+        }}
+      >
+        ไปจองโต๊ะ
+      </button>
+    </div>
+  );
+}
+
 export default function Snacks(){
   const navigate=useNavigate();
   const [sp,setSp]=useSearchParams();
   const tableLabel=getTableFromParams(sp);
   const qs = tableLabel ? `?table=${encodeURIComponent(tableLabel)}` : "";
+  const canOrder = !!tableLabel;
 
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState(null);
@@ -58,14 +101,16 @@ export default function Snacks(){
 
   useEffect(()=>{ try{ sessionStorage.setItem(cartKey(tableLabel),JSON.stringify(items)); }catch{} },[items,tableLabel]);
 
-  const dec=(id)=>setItems(list=>list.map(it=>it.id===id?{...it,qty:Math.max(0,toNum(it.qty)-1)}:it));
-  const inc=(id)=>setItems(list=>list.map(it=>it.id===id?{...it,qty:toNum(it.qty)+1}:it));
+  const dec=(id)=> canOrder && setItems(list=>list.map(it=>it.id===id?{...it,qty:Math.max(0,toNum(it.qty)-1)}:it));
+  const inc=(id)=> canOrder && setItems(list=>list.map(it=>it.id===id?{...it,qty:toNum(it.qty)+1}:it));
 
   const filtered=useMemo(()=>{ const q=normText(debouncedQ); if(!q) return items; return items.filter(it=>normText(it.name).includes(q)); },[items,debouncedQ]);
   const cartCount=useMemo(()=>items.reduce((s,it)=>s+toNum(it.qty),0),[items]);
   const cartTotal=useMemo(()=>items.reduce((s,it)=>s+toNum(it.qty)*toNum(it.price),0),[items]);
 
-  const goConfirm=()=>{ const selected=items.map(x=>({...x,qty:toNum(x.qty),price:toNum(x.price)})).filter(x=>x.qty>0);
+  const goConfirm=()=>{ 
+    if(!canOrder){ alert("กรุณาสแกน/จองโต๊ะก่อนครับ"); return; }
+    const selected=items.map(x=>({...x,qty:toNum(x.qty),price:toNum(x.price)})).filter(x=>x.qty>0);
     if(!selected.length){ alert("ยังไม่ได้เลือกของทานเล่น"); return; }
     try{
       sessionStorage.setItem(`${cartKey(tableLabel)}_selected`, JSON.stringify(selected.map(x=>({...x,snack_id:String(x.id),price:Number(x.price)}))));
@@ -77,12 +122,14 @@ export default function Snacks(){
   return (
     <div className="fd-page">
       <header className="fd-topbar">
-        <button className="fd-back" onClick={()=>navigate("/"+qs)} aria-label="ย้อนกลับ">‹</button>
+        <button className="fd-back" onClick={()=>navigate(qs ? "/"+qs : "/")} aria-label="ย้อนกลับ">‹</button>
         <div className="fd-title"><span>หมายเลขโต๊ะ</span><strong>{tableLabel || "—"}</strong></div>
-        <button className="fd-cartBtn" onClick={goConfirm} aria-label="ไปยืนยันออเดอร์">
+        <button className="fd-cartBtn" onClick={goConfirm} aria-label="ไปยืนยันออเดอร์" disabled={!canOrder}>
           <span className="fd-cartIcon">🧺</span><span className="fd-badge">{cartCount}</span>
         </button>
       </header>
+
+      {!canOrder && <NeedTableNotice />}
 
       <main className="fd-container">
         <h2 className="fd-sectionTitle">เมนูของทานเล่น</h2>
@@ -111,9 +158,9 @@ export default function Snacks(){
                   <div className="fd-price">{toNum(it.price).toFixed(2)} ฿</div>
                 </div>
                 <div className="fd-ctrl" aria-label={`ตัวควบคุมจำนวน ${it.name}`}>
-                  <button className="fd-circle" onClick={()=>dec(it.id)} aria-label={`ลด ${it.name}`}>–</button>
+                  <button className="fd-circle" onClick={()=>dec(it.id)} disabled={!canOrder} aria-label={`ลด ${it.name}`}>–</button>
                   <span className="fd-qty" aria-live="polite">{toNum(it.qty)}</span>
-                  <button className="fd-circle" onClick={()=>inc(it.id)} aria-label={`เพิ่ม ${it.name}`}>+</button>
+                  <button className="fd-circle" onClick={()=>inc(it.id)} disabled={!canOrder} aria-label={`เพิ่ม ${it.name}`}>+</button>
                 </div>
               </li>
             ))}
@@ -130,7 +177,7 @@ export default function Snacks(){
 
       <div className={`fd-bottom ${cartCount ? "show" : ""}`} role="region" aria-live="polite">
         <div className="fd-bottomInfo"><span className="fd-bottomCount">{cartCount} รายการ</span><span className="fd-bottomTotal">{cartTotal.toFixed(2)} ฿</span></div>
-        <button className="fd-bottomBtn" onClick={goConfirm}>ยืนยันออเดอร์</button>
+        <button className="fd-bottomBtn" onClick={goConfirm} disabled={!canOrder}>ยืนยันออเดอร์</button>
       </div>
     </div>
   );
