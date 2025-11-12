@@ -5,12 +5,12 @@ import { useAuth } from "../../auth/AuthContext";
 import "./admin.css";
 
 /* ====== FIX: กัน VITE_API_BASE เขียนพลาดมี , หรือ / ท้าย ====== */
-const RAW_API  = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+const RAW_API = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 const API_BASE = RAW_API.replace(/[,\s]+$/, "").replace(/\/+$/, "");
 
 /* ====== Resources ====== */
 const RESOURCE_MAP = { main: "main_dishes", snack: "snacks", drink: "drinks" };
-const TYPE_LABEL   = { main: "อาหารจานหลัก", snack: "ของว่าง", drink: "เครื่องดื่ม" };
+const TYPE_LABEL = { main: "อาหารจานหลัก", snack: "ของว่าง", drink: "เครื่องดื่ม" };
 
 /* ====== Helpers ====== */
 function extractId(r) {
@@ -67,7 +67,7 @@ function imgFromBackend(r) {
         const mime = r.image_mime || "image/jpeg";
         return asDataUrlFromBase64(b64, String(mime));
       }
-    } catch {}
+    } catch { }
   }
 
   // เส้นทางไฟล์/URL
@@ -103,8 +103,9 @@ export default function AdminFoodMenu() {
   const { logout } = useAuth();
 
   const isDashboard = location.pathname === "/admin";
-  const isFoodMenu  = location.pathname.startsWith("/admin/menu");
-  const isUsers     = location.pathname.startsWith("/admin/users");
+  const isFoodMenu = location.pathname.startsWith("/admin/menu");
+  const isUsers = location.pathname.startsWith("/admin/users");
+  const isTables = location.pathname.startsWith("/admin/table");
 
   const [type, setType] = useState("main");
   const [menus, setMenus] = useState([]);
@@ -271,12 +272,12 @@ export default function AdminFoodMenu() {
     const nextDisplayedPrice =
       resName === "drinks"
         ? Math.min(
-            ...[
-              toNumberSafe(draft.price_hot ?? 0),
-              toNumberSafe(draft.price_iced ?? 0),
-              toNumberSafe(draft.price_frappe ?? 0),
-            ].filter((x) => x > 0)
-          ) || 0
+          ...[
+            toNumberSafe(draft.price_hot ?? 0),
+            toNumberSafe(draft.price_iced ?? 0),
+            toNumberSafe(draft.price_frappe ?? 0),
+          ].filter((x) => x > 0)
+        ) || 0
         : toNumberSafe(draft.price);
 
     const prev = menus;
@@ -284,19 +285,19 @@ export default function AdminFoodMenu() {
       prev.map((m) =>
         m.id === id
           ? {
-              ...m,
-              name: draft.name,
-              price: nextDisplayedPrice,
-              prices:
-                resName === "drinks"
-                  ? {
-                      hot: toNumberSafe(draft.price_hot ?? m?.prices?.hot ?? 0),
-                      iced: toNumberSafe(draft.price_iced ?? m?.prices?.iced ?? 0),
-                      frappe: toNumberSafe(draft.price_frappe ?? m?.prices?.frappe ?? 0),
-                    }
-                  : m.prices ?? null,
-              img: editPreview || m.img,
-            }
+            ...m,
+            name: draft.name,
+            price: nextDisplayedPrice,
+            prices:
+              resName === "drinks"
+                ? {
+                  hot: toNumberSafe(draft.price_hot ?? m?.prices?.hot ?? 0),
+                  iced: toNumberSafe(draft.price_iced ?? m?.prices?.iced ?? 0),
+                  frappe: toNumberSafe(draft.price_frappe ?? m?.prices?.frappe ?? 0),
+                }
+                : m.prices ?? null,
+            img: editPreview || m.img,
+          }
           : m
       )
     );
@@ -307,13 +308,13 @@ export default function AdminFoodMenu() {
       const payload =
         resName === "drinks"
           ? {
-              name: draft.name,
-              price_hot: toNumberSafe(draft.price_hot ?? 0),
-              price_iced: toNumberSafe(draft.price_iced ?? 0),
-              price_frappe: toNumberSafe(draft.price_frappe ?? 0),
-              price: nextDisplayedPrice,
-              image_ver: Date.now(),
-            }
+            name: draft.name,
+            price_hot: toNumberSafe(draft.price_hot ?? 0),
+            price_iced: toNumberSafe(draft.price_iced ?? 0),
+            price_frappe: toNumberSafe(draft.price_frappe ?? 0),
+            price: nextDisplayedPrice,
+            image_ver: Date.now(),
+          }
           : { name: draft.name, price: toNumberSafe(draft.price), image_ver: Date.now() };
 
       // รับรูปจากไฟล์เท่านั้น (dataURL)
@@ -409,12 +410,12 @@ export default function AdminFoodMenu() {
     const basePrice =
       resName === "drinks"
         ? Math.min(
-            ...[
-              toNumberSafe(addForm.price_hot),
-              toNumberSafe(addForm.price_iced),
-              toNumberSafe(addForm.price_frappe),
-            ].filter((x) => x > 0)
-          ) || 0
+          ...[
+            toNumberSafe(addForm.price_hot),
+            toNumberSafe(addForm.price_iced),
+            toNumberSafe(addForm.price_frappe),
+          ].filter((x) => x > 0)
+        ) || 0
         : toNumberSafe(addForm.price);
 
     setMenus((prev) => [
@@ -426,10 +427,10 @@ export default function AdminFoodMenu() {
         prices:
           resName === "drinks"
             ? {
-                hot: toNumberSafe(addForm.price_hot),
-                iced: toNumberSafe(addForm.price_iced),
-                frappe: toNumberSafe(addForm.price_frappe),
-              }
+              hot: toNumberSafe(addForm.price_hot),
+              iced: toNumberSafe(addForm.price_iced),
+              frappe: toNumberSafe(addForm.price_frappe),
+            }
             : null,
         img: addPreview || "https://placehold.co/600x400?text=No+Image",
       },
@@ -441,13 +442,13 @@ export default function AdminFoodMenu() {
       const payload =
         resName === "drinks"
           ? {
-              name: addForm.name,
-              price_hot: toNumberSafe(addForm.price_hot),
-              price_iced: toNumberSafe(addForm.price_iced),
-              price_frappe: toNumberSafe(addForm.price_frappe),
-              price: basePrice,
-              image_ver: Date.now(),
-            }
+            name: addForm.name,
+            price_hot: toNumberSafe(addForm.price_hot),
+            price_iced: toNumberSafe(addForm.price_iced),
+            price_frappe: toNumberSafe(addForm.price_frappe),
+            price: basePrice,
+            image_ver: Date.now(),
+          }
           : { name: addForm.name, price: toNumberSafe(addForm.price), image_ver: Date.now() };
 
       // รูปจากไฟล์เท่านั้น (dataURL)
@@ -571,7 +572,8 @@ export default function AdminFoodMenu() {
         <nav className="ad-nav">
           <NavItem icon={UserTableIcon} label="Dashboard" active={isDashboard} onClick={() => navigate("/admin")} />
           <NavItem icon={MenuIcon} label="จัดการเมนูอาหาร" active={isFoodMenu} onClick={() => navigate("/admin/menu")} />
-          <NavItem icon={UsersIcon} label="จัดการการจอง (Bookings)" active={isUsers} onClick={() => navigate("/admin/users")} />
+          <NavItem icon={UsersIcon} label="จัดการจอง (Bookings)" active={isUsers} onClick={() => navigate("/admin/users")} />
+          <NavItem icon={TablesIcon} label="จัดการ Tables " active={isTables} onClick={() => navigate("/admin/tables")} />
           <NavItem icon={LogoutIcon} label="ออกจากระบบ" onClick={logout} />
         </nav>
       </aside>
@@ -854,6 +856,17 @@ function UsersIcon() {
     </svg>
   );
 }
+
+function TablesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <line x1="3" y1="9" x2="21" y2="9" />
+      <line x1="12" y1="3" x2="12" y2="21" />
+    </svg>
+  );
+}
+
 function LogoutIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
