@@ -4,10 +4,8 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import "./admin.css";
 
-/* ===== API base: กันเคสมี / ต่อท้าย ===== */
-const API_BASE = (import.meta.env.VITE_API_BASE || "http://localhost:5000").replace(/\/+$/, "");
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
-/* ===== ไอคอนเล็ก ๆ ===== */
 const icon = (d) => (<svg viewBox="0 0 24 24" aria-hidden="true"><path d={d} /></svg>);
 function DashIcon() { return icon("M3 6h18M3 12h18M3 18h18"); }
 function MenuIcon() { return icon("M4 6h16M4 12h10M4 18h16"); }
@@ -22,6 +20,7 @@ function TablesIcon() {
     </svg>
   );
 }
+
 function NavItem({ icon: Icon, label, active, onClick }) {
   return (
     <button className={`ad-nav__item ${active ? "is-active" : ""}`} onClick={onClick} type="button">
@@ -30,16 +29,13 @@ function NavItem({ icon: Icon, label, active, onClick }) {
   );
 }
 
-/* ===== ฟอร์แมตไทย ===== */
 const TH_MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
 const toThaiDate = (iso) => (!iso ? "-" : (() => { const [y, m, d] = iso.split("-").map(v => parseInt(v, 10)); return y && m && d ? `${d} ${TH_MONTHS[m - 1]} ${y}` : iso; })());
 const toThaiTime = (hhmm) => (!hhmm ? "-" : (() => { const [h, m] = hhmm.split(":"); return `${h}.${m}`; })());
 
-/* ===== แปลค่า ===== */
 const ZONE_TH = { in: "โซนในร้าน", out: "โซนนอกร้าน" };
 const STATUS_TH = { pending: "ค้าง", confirmed: "อนุมัติแล้ว", cancelled: "ปฏิเสธแล้ว", seated: "นั่งแล้ว", done: "เสร็จสิ้น" };
 
-/* ===== จัดรูป booking ให้เป็นรูปแบบเดียวกัน ===== */
 function mapBooking(r) {
   const dt = r.datetime ?? r.date_time ?? null;
   const dateFromDT = dt ? String(dt).slice(0, 10) : "";
@@ -61,13 +57,10 @@ function mapBooking(r) {
     status: r.status ?? "pending",
     note: r.note ?? r.notes ?? "",
     slip_path: r.slip_path ?? r.slip_url ?? r.slip ?? null,
-    qr_code: r.qr_code ?? null,
-    qr_url: r.qr_url ?? null,           // รองรับ URL ที่ backend ส่งมา
     _raw: r,
   };
 }
 
-/* ===== แปลงที่มาของรูป slip ===== */
 function slipSrc(b) {
   const raw = b?._raw ?? {};
   const blob = raw.slip_blob;
@@ -82,8 +75,6 @@ function slipSrc(b) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
-/* ========================================================================= */
-
 export default function AdminBookings() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
@@ -96,20 +87,17 @@ export default function AdminBookings() {
   const tab = searchParams.get("tab") || "pending";
   const [currentIndex, setCurrentIndex] = useState(0);
   const [toast, setToast] = useState(null);
-  const [actionBusy, setActionBusy] = useState(false);   // กันการกดซ้ำ
+  const [actionBusy, setActionBusy] = useState(false);   // 🔒 กันการกดซ้ำ
 
   const showToast = (text, type = "ok") => { setToast({ text, type }); setTimeout(() => setToast(null), 1600); };
 
-  /* ===== ไฮไลต์เมนู (แก้ path ผิด) ===== */
   const isDashboard = location.pathname === "/admin";
   const isMenu = location.pathname.startsWith("/admin/menu");
-  const isBookings = location.pathname.startsWith("/admin/bookings"); // ← fixed
+  const isBookings = location.pathname.startsWith("/admin/user");
   const isTable = location.pathname.startsWith("/admin/tables");
 
-  /* ===== โหลดข้อมูล ===== */
   useEffect(() => {
-    let ignore = false;
-    (async () => {
+    let ignore = false; (async () => {
       setLoading(true); setErr("");
       try {
         const res = await fetch(`${API_BASE}/bookings`, { headers: { Accept: "application/json" } });
@@ -117,13 +105,9 @@ export default function AdminBookings() {
         const data = await res.json();
         const list = (Array.isArray(data) ? data : []).map(mapBooking);
         if (!ignore) { setRows(list); setCurrentIndex(0); }
-      } catch (e) {
-        if (!ignore) { setErr(`โหลดข้อมูลล้มเหลว: ${e.message}`); setRows([]); }
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    })();
-    return () => { ignore = true };
+      } catch (e) { if (!ignore) { setErr(`โหลดข้อมูลล้มเหลว: ${e.message}`); setRows([]); } }
+      finally { if (!ignore) setLoading(false); }
+    })(); return () => { ignore = true };
   }, []);
 
   const filtered = useMemo(() => {
@@ -132,11 +116,10 @@ export default function AdminBookings() {
     return rows;
   }, [rows, tab]);
 
-  /* ===== อัปเดตสถานะ ===== */
   async function updateStatus(id, status, tableNoFromUI) {
     if (actionBusy) return;
     const prev = rows;
-    setRows(p => p.map(x => x.id === id ? { ...x, status } : x));   // optimistic
+    setRows(p => p.map(x => x.id === id ? { ...x, status } : x));   // optimistically update
     setActionBusy(true);
     try {
       const res = await fetch(`${API_BASE}/bookings/${id}`, {
@@ -149,11 +132,11 @@ export default function AdminBookings() {
       const t = data?.table_no || tableNoFromUI || "";
 
       if (status === "confirmed" && t) {
-        // อนุมัติแล้ว อาจมีลอจิกเพิ่มเติมถ้าต้อง
+        return;
       }
       showToast("อัปเดตสถานะแล้ว", "ok");
     } catch (e) {
-      setRows(prev); // rollback
+      setRows(prev);                         // rollback
       showToast(`อัปเดตไม่สำเร็จ: ${e.message}`, "err");
     } finally {
       setActionBusy(false);
@@ -162,9 +145,9 @@ export default function AdminBookings() {
 
   const b = filtered[currentIndex] || null;
   const setTab = (t) => { setSearchParams({ tab: t }); setCurrentIndex(0); };
+
   const canAct = b && b.status === "pending";
 
-  /* ========================= RENDER ========================= */
   return (
     <div className="admin-layout">
       <aside className="ad-sidebar">
@@ -177,9 +160,11 @@ export default function AdminBookings() {
           <NavItem icon={MenuIcon} label="จัดการเมนูอาหาร" active={isMenu} onClick={() => navigate("/admin/menu")} />
           <NavItem icon={UsersIcon} label="จัดการจอง (Bookings)" active={isBookings} onClick={() => navigate("/admin/bookings")} />
           <NavItem icon={TablesIcon} label="จัดการ Tables" active={isTable} onClick={() => navigate("/admin/tables")} />
+
           <NavItem icon={LogoutIcon} label="ออกจากระบบ" onClick={logout} />
         </nav>
       </aside>
+
 
       <main className="ad-main">
         <header className="ad-header">
@@ -211,6 +196,7 @@ export default function AdminBookings() {
                   <div className="detail-row">
                     <div className="detail-title">
                       โต๊ะ: {b.table || "-"}{b.zone ? ` (${ZONE_TH[b.zone] || b.zone})` : ""}
+                      {/* แสดงป้ายสถานะเล็ก ๆ */}
                       <span className={`status-chip s-${b.status}`} style={{ marginLeft: 8 }}>
                         {STATUS_TH[b.status] || b.status}
                       </span>
@@ -229,21 +215,10 @@ export default function AdminBookings() {
                 <div className="slip-box" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                   {slipSrc(b) && <img src={slipSrc(b)} alt="สลิป" style={{ marginBottom: 8, maxWidth: "100%" }} />}
 
-                  {/* QR + ปุ่มลิงก์โปรดักชัน */}
+                  {/* QR code */}
                   {b?.qr_code && (
                     <>
                       <img src={b.qr_code} alt="QR code" style={{ marginBottom: 8, maxWidth: "220px" }} />
-                      {b.qr_url && (
-                        <a
-                          href={b.qr_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-open"
-                          style={{ padding: "6px 12px", background: "#1976d2", color: "#fff", borderRadius: 4, textDecoration: "none", marginBottom: 8 }}
-                        >
-                          เปิดหน้าเว็บจริง
-                        </a>
-                      )}
                       <a
                         href={b.qr_code}
                         download={`QR_Table_${b.table}.png`}
@@ -256,7 +231,7 @@ export default function AdminBookings() {
                   )}
                 </div>
 
-                {/* ปุ่มอนุมัติ/ปฏิเสธ เฉพาะสถานะ pending */}
+                {/* ✅ ปุ่มจะแสดงเฉพาะตอน pending */}
                 {canAct ? (
                   <div className="detail-actions">
                     <button
@@ -264,9 +239,11 @@ export default function AdminBookings() {
                       disabled={actionBusy}
                       onClick={async () => {
                         if (!confirm(`ยืนยันอนุมัติการจองโต๊ะ ${b.table}?`)) return;
+
                         setActionBusy(true);
+
                         try {
-                          // 1) เรียก decision เพื่อให้ backend จัดการโต๊ะ + สร้าง QR
+                          // 1️⃣ เรียก API decision เพื่อรับ QR code และ zone
                           const res = await fetch(`${API_BASE}/tables/${b.table}/decision`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -275,15 +252,20 @@ export default function AdminBookings() {
                           if (!res.ok) throw new Error(`HTTP ${res.status}`);
                           const data = await res.json();
 
-                          // 2) อัปเดตสถานะใน bookings
+                          // 2️⃣ อัปเดต status ผ่าน updateStatus
                           await updateStatus(b.id, "confirmed", b.table);
 
-                          // 3) อัปเดต QR/ZONE/URL ใน UI
+                          // 3️⃣ อัปเดต QR code และ zone ใน UI
                           setRows(prev => prev.map(r =>
                             r.id === b.id
-                              ? { ...r, qr_code: data.qr_code || r.qr_code, qr_url: data.url || r.qr_url, zone: data.zone || r.zone }
+                              ? {
+                                ...r,
+                                qr_code: data.qr_code,      // QR code จาก API
+                                zone: data.zone || r.zone   // zone ใหม่ถ้ามี
+                              }
                               : r
                           ));
+
                           showToast("อนุมัติโต๊ะเรียบร้อยแล้ว");
                         } catch (e) {
                           console.error("onApproveTable error:", e);
@@ -297,13 +279,18 @@ export default function AdminBookings() {
                       {actionBusy ? "กำลังบันทึก..." : "อนุมัติ"}
                     </button>
 
+
+
                     <button
                       className="btn-reject"
                       disabled={actionBusy}
                       onClick={async () => {
                         if (!confirm(`ยืนยันปฏิเสธการจองโต๊ะ ${b.table}?`)) return;
+
                         setActionBusy(true);
+
                         try {
+                          // 1️⃣ เรียก API decision เพื่อปฏิเสธโต๊ะ
                           const res = await fetch(`${API_BASE}/tables/${b.table}/decision`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
@@ -312,11 +299,14 @@ export default function AdminBookings() {
                           if (!res.ok) throw new Error(`HTTP ${res.status}`);
                           const data = await res.json();
 
+                          // 2️⃣ อัปเดต status ผ่าน updateStatus
                           await updateStatus(b.id, "cancelled", b.table);
 
+                          // 3️⃣ อัปเดต QR code และ zone ใน UI (กรณีปฏิเสธ จะลบ QR code)
                           setRows(prev => prev.map(r =>
-                            r.id === b.id ? { ...r, qr_code: null, qr_url: null, zone: data.zone || r.zone } : r
+                            r.id === b.id ? { ...r, qr_code: null, zone: data.zone || r.zone } : r
                           ));
+
                           showToast("ปฏิเสธโต๊ะเรียบร้อยแล้ว");
                         } catch (e) {
                           console.error("onRejectTable error:", e);
@@ -329,12 +319,14 @@ export default function AdminBookings() {
                     >
                       {actionBusy ? "กำลังบันทึก..." : "ปฏิเสธ"}
                     </button>
+
                   </div>
                 ) : (
                   <div className="detail-actions muted">
                     <span className="hint">รายการนี้{STATUS_TH[b.status] || b.status}</span>
                   </div>
                 )}
+
               </div>
             )}
           </div>
@@ -344,6 +336,8 @@ export default function AdminBookings() {
             <div className="pager-info">{filtered.length === 0 ? "0/0" : `${currentIndex + 1}/${filtered.length}`}</div>
             <button className="pager-btn" disabled={currentIndex >= filtered.length - 1} onClick={() => setCurrentIndex(i => Math.min(filtered.length - 1, i + 1))} type="button">ถัดไป →</button>
           </div>
+
+
         </section>
       </main>
     </div>
