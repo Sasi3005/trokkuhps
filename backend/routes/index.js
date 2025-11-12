@@ -15,7 +15,7 @@ router.use("/drink_base_prices", require("./drinkBasePriceRoutes"));
 router.use("/bookings", require("./bookingsRoutes")); // 👈 เพิ่มไว้ตรงนี้
 router.use("/admins", require("./adminRoutes"));
 router.use("/metrics", require("./metricsRoutes"));
-
+router.use("/tables", require("./tableRoutes"));
 
 const reportsRoutes = require('./reportsRoutes');
 router.use("/reports", reportsRoutes);
