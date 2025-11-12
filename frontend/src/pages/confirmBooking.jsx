@@ -1,3 +1,4 @@
+// src/pages/ConfirmBooking.jsx
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import "./confirmBooking.css";
@@ -7,8 +8,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 const AFTER_SAVE_PATH = "/success";
 
 /* ===== QR (FRONT-END ONLY) */
-const STATIC_QR_URL =
-  import.meta.env.VITE_QR_SRC?.trim() || "/qr-payment.jpg";
+const STATIC_QR_URL = (import.meta.env.VITE_QR_SRC || "/qr-payment.jpg").trim();
 
 const STATIC_QR_META = {
   provider: import.meta.env.VITE_QR_PROVIDER || "promptpay",
@@ -23,13 +23,11 @@ function toLocalDateInputValue(date = new Date()) {
   const local = new Date(date.getTime() - off * 60 * 1000);
   return local.toISOString().slice(0, 10);
 }
-
 function toLocalTimeHHmm(date = new Date()) {
   const off = date.getTimezoneOffset();
   const local = new Date(date.getTime() - off * 60 * 1000);
   return local.toISOString().slice(11, 16);
 }
-
 function roundToNext30Min(d = new Date()) {
   const date = new Date(d);
   date.setSeconds(0, 0);
@@ -37,7 +35,6 @@ function roundToNext30Min(d = new Date()) {
   date.setMinutes(m % 30 === 0 ? m : m + (30 - (m % 30)));
   return date;
 }
-
 function guessMime(url = "") {
   const u = url.toLowerCase();
   if (u.endsWith(".jpg") || u.endsWith(".jpeg")) return "image/jpeg";
@@ -53,11 +50,7 @@ const ZONE_MAP_TO_TH = {
   "โซนในร้าน": "โซนในร้าน",
   "โซนนอกร้าน": "โซนนอกร้าน",
 };
-
-const ZONE_MAP_TO_DB = {
-  inside: "โซนในร้าน",
-  outside: "โซนนอกร้าน",
-};
+const ZONE_MAP_TO_DB = { inside: "โซนในร้าน", outside: "โซนนอกร้าน" };
 
 /* ===== Component ===== */
 export default function ConfirmBooking() {
@@ -180,18 +173,31 @@ export default function ConfirmBooking() {
       setErrMsg("");
 
       const fd = new FormData();
+      // ---- ชื่อต้อง “ตรงกับฝั่งหลัง” ----
       fd.append("name", form.name);
       fd.append("phone", form.phone);
-      fd.append("table_number", rawTableNo);
+      fd.append("table_number", rawTableNo);         // ถ้าหลังบ้านใช้ table_id ให้เปลี่ยนเป็น table_id
       fd.append("zone", ZONE_MAP_TO_DB[rawZone] || "โซนในร้าน");
       fd.append("date", form.date);
       fd.append("time", form.time);
       fd.append("slip", form.slip);
 
-      const res = await fetch(`${API_BASE}/bookings`, { method: "POST", body: fd });
-      const data = await res.json().catch(() => ({}));
+      const res = await fetch(`${API_BASE}/bookings`, {
+        method: "POST",
+        body: fd,                 // อย่าตั้ง Content-Type เอง
+        // ถ้าใช้คุกกี้ session ให้เปิดบรรทัดนี้ด้วย และ backend ต้อง set credentials:true
+        // credentials: "include",
+      });
 
-      if (!res.ok) throw new Error(data.error || `บันทึกล้มเหลว (HTTP ${res.status})`);
+      // อ่าน body แบบปลอดภัยเพื่อให้เห็นสาเหตุ 502/500
+      const text = await res.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch { /* not json */ }
+
+      if (!res.ok) {
+        console.error("POST /bookings failed:", res.status, text);
+        throw new Error(data?.error || `บันทึกล้มเหลว (HTTP ${res.status})`);
+      }
 
       const payload = {
         booking_id: data.booking_id,
@@ -205,7 +211,7 @@ export default function ConfirmBooking() {
 
       try {
         sessionStorage.setItem("last_booking", JSON.stringify(payload));
-      } catch { }
+      } catch {}
 
       navigate(AFTER_SAVE_PATH, { replace: true, state: payload });
     } catch (err) {
@@ -286,7 +292,6 @@ export default function ConfirmBooking() {
         <div className="field upload">
           <div className="field__label">แนบสลิป</div>
 
-          {/* ใช้ label แทน input */}
           <label className="upload__drop">
             <div className="icon">📎</div>
             <div className="t1">ลากสลิปมาที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
@@ -311,7 +316,6 @@ export default function ConfirmBooking() {
             </div>
           )}
         </div>
-
 
         {errMsg && <div className="form-error">{errMsg}</div>}
 
