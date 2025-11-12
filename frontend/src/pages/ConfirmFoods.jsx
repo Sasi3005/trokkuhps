@@ -127,7 +127,7 @@ export default function ConfirmFoods() {
       }
 
       sessionStorage.setItem(ORDER_NOTE_KEY(table), asStr(orderNote, ""));
-    } catch {}
+    } catch { }
   }, [items, orderNote, table]);
 
   // ---------- Derived ----------
@@ -156,7 +156,7 @@ export default function ConfirmFoods() {
 
       const method =
         paymentMethod === "เงินสด" ? "cash" :
-        paymentMethod === "พร้อมเพย์" ? "promptpay" : "unknown";
+          paymentMethod === "พร้อมเพย์" ? "promptpay" : "unknown";
 
       const body = {
         table_number: null,
@@ -181,7 +181,7 @@ export default function ConfirmFoods() {
       });
       if (!res.ok) {
         let msg = `HTTP ${res.status}`;
-        try { msg = (await res.json())?.message || msg; } catch {}
+        try { msg = (await res.json())?.message || msg; } catch { }
         throw new Error(msg);
       }
       const data = await res.json();
@@ -315,6 +315,36 @@ export default function ConfirmFoods() {
                   <option value="เงินสด">💵 เงินสด</option>
                   <option value="พร้อมเพย์">🏧 พร้อมเพย์</option>
                 </select>
+
+                {paymentMethod === "พร้อมเพย์" && (
+                  <div style={{ marginTop: "1rem", textAlign: "center" }}>
+                    <img
+                      src="/public/qr-payment.jpg"
+                      alt="QR Payment"
+                      style={{ maxWidth: "200px", width: "100%" }}
+                    />
+
+                    {/* ฟอร์มอัปโหลดสลิป */}
+                    <div style={{ marginTop: "1rem" }}>
+                      <label htmlFor="slipUpload" style={{ display: "block", marginBottom: "0.5rem" }}>
+                        📎 อัปโหลดสลิป
+                      </label>
+                      <input
+                        type="file"
+                        id="slipUpload"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            console.log("Selected file:", file);
+                            // คุณสามารถส่งไป backend หรือ preview ได้
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
 
                 <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
                   <button

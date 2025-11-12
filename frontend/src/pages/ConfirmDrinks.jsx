@@ -193,17 +193,74 @@ export default function ConfirmDrinks() {
                 />
               </div>
 
-              <div className="fd-card fd-compactCard">
-                <label className="fd-fieldTitle">💳 วิธีชำระเงิน</label>
-                <select
-  className="fd-select fd-select--sm"
-  value={paymentMethod}
-  onChange={(e) => setPaymentMethod(e.target.value)}
->
-  <option value="cash">🪙 เงินสด</option>
-  <option value="promptpay">🏧 พร้อมเพย์</option>
-</select>
+              {/* หมายเหตุใบสั่ง / วิธีชำระเงิน */}
+              <div className="fd-grid" style={{ marginTop: "14px", gridTemplateColumns: "1fr" }}>
+                <div className="fd-card" style={{ padding: "1rem" }}>
+                  <label style={{ fontWeight: 700, color: "var(--ink)" }}>รายละเอียดเพิ่มเติม</label>
+                  <textarea
+                    placeholder="เช่น ไม่ใส่ช้อนส้อม, เสิร์ฟพร้อมกัน"
+                    value={orderNote}
+                    onChange={(e) => setOrderNote(e.target.value)}
+                    style={{
+                      width: "100%",
+                      marginTop: ".55rem",
+                      minHeight: 90,
+                      borderRadius: 12,
+                      border: "1px solid var(--border)",
+                      padding: "10px 12px",
+                      resize: "vertical",
+                      fontFamily: "inherit",
+                    }}
+                  />
+                </div>
 
+                <div className="fd-card" style={{ padding: "1rem" }}>
+                  <label style={{ fontWeight: 700, color: "var(--ink)" }}>💳 วิธีชำระเงิน</label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    style={{
+                      width: "100%",
+                      marginTop: ".55rem",
+                      padding: "10px 12px",
+                      borderRadius: 10,
+                      border: "1px solid var(--border)",
+                      background: "var(--surface-2)",
+                    }}
+                  >
+                    <option value="เงินสด">💵 เงินสด</option>
+                    <option value="พร้อมเพย์">🏧 พร้อมเพย์</option>
+                  </select>
+
+                  {paymentMethod === "พร้อมเพย์" && (
+                    <div style={{ marginTop: "1rem", textAlign: "center" }}>
+                      <img
+                        src="/public/qr-payment.jpg"
+                        alt="QR Payment"
+                        style={{ maxWidth: "200px", width: "100%" }}
+                      />
+
+                      {/* ฟอร์มอัปโหลดสลิป */}
+                      <div style={{ marginTop: "1rem" }}>
+                        <label htmlFor="slipUpload" style={{ display: "block", marginBottom: "0.5rem" }}>
+                          📎 อัปโหลดสลิป
+                        </label>
+                        <input
+                          type="file"
+                          id="slipUpload"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              console.log("Selected file:", file);
+                              // คุณสามารถส่งไป backend หรือ preview ได้
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
 
 
                 <div className="fd-actionsRow">
