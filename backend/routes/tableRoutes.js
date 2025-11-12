@@ -2,13 +2,10 @@
 const express = require("express");
 const router = express.Router();
 
-// ✅ ตั้งชื่อให้ชัดเจน ไม่ซ้ำ
 const tableController = require("../controllers/tableController");
-const generateQRController = require("../controllers/generateQR");
+const generateQRController = require("../controllers/generateQR"); // ถ้ามีใช้จริง
 
-// ========================
-// เส้นทางหลักของโต๊ะ
-// ========================
+// ===== Tables CRUD =====
 router.get("/", tableController.getAllTables);
 router.get("/:id", tableController.getTableById);
 router.get("/:id/orders", tableController.getTableWithOrders);
@@ -17,16 +14,12 @@ router.post("/", tableController.createTable);
 router.put("/:id", tableController.updateTable);
 router.delete("/:id", tableController.deleteTable);
 
-// ========================
-// เส้นทางเกี่ยวกับ QR
-// ========================
+// ===== QR actions =====
 router.post("/:tableNumber/generate-qr", generateQRController.generateQRCodeForTable);
 router.post("/:tableNumber/clear-qr", tableController.clearQRCode);
 router.get("/:tableNumber/qr", tableController.serveQRCode);
 
-// ========================
-// เส้นทางสำหรับอนุมัติ/ปฏิเสธโต๊ะ
-// ========================
+// ===== Decision: approve / reject / cancel =====
 router.post("/:tableNumber/decision", tableController.approveOrRejectTable);
 
 module.exports = router;

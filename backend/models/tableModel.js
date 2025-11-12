@@ -23,7 +23,8 @@ function mustAllowedZone(z) {
 async function getAll() {
   const [rows] = await db.query(
     `SELECT table_id, table_number, zone, status, qr_code, qr_expire
-       FROM tables ORDER BY table_number ASC`
+     FROM tables
+     ORDER BY table_number ASC`
   );
   return rows;
 }
@@ -31,7 +32,8 @@ async function getAll() {
 async function getById(id) {
   const [rows] = await db.query(
     `SELECT table_id, table_number, zone, status, qr_code, qr_expire
-       FROM tables WHERE table_id = ?`,
+     FROM tables
+     WHERE table_id = ?`,
     [id]
   );
   return rows?.[0] || null;
@@ -40,7 +42,8 @@ async function getById(id) {
 async function getByNumber(table_number) {
   const [rows] = await db.query(
     `SELECT table_id, table_number, zone, status, qr_code, qr_expire
-     FROM tables WHERE table_number = ?`,
+     FROM tables
+     WHERE table_number = ?`,
     [String(table_number)]
   );
   return rows?.[0] || null;
@@ -83,11 +86,6 @@ async function setStatusByNumber(table_number, status) {
   return r.affectedRows || 0;
 }
 
-/**
- * ฟังก์ชันอัปเดตสถานะโต๊ะหลังจากแอดมินกด "อนุมัติ" หรือ "ปฏิเสธ"
- * @param {string|number} table_number หมายเลขโต๊ะ
- * @param {boolean} approved true = อนุมัติ, false = ปฏิเสธ
- */
 async function updateStatusAfterApproval(table_number, approved) {
   const newStatus = approved ? "กำลังใช้งาน" : "ว่าง";
   const [r] = await db.query(
@@ -110,6 +108,15 @@ async function clearQRCode(id) {
   return r.affectedRows || 0;
 }
 
+// ✅ เพิ่มตัวนี้สำหรับใช้กับ route ที่ส่ง tableNumber
+async function clearQRCodeByNumber(table_number) {
+  const [r] = await db.query(
+    `UPDATE tables SET qr_code = NULL, qr_expire = NULL WHERE table_number = ?`,
+    [String(table_number)]
+  );
+  return r.affectedRows || 0;
+}
+
 module.exports = {
   getAll,
   getById,
@@ -117,7 +124,8 @@ module.exports = {
   create,
   update,
   setStatusByNumber,
-  updateStatusAfterApproval, // ✅ เพิ่มเข้ามาใหม่
+  updateStatusAfterApproval,
   delete: remove,
-  clearQRCode
+  clearQRCode,
+  clearQRCodeByNumber, // ✅
 };
