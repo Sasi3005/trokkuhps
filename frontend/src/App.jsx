@@ -26,7 +26,12 @@ import AdminTable from "./pages/admin/AdminTable";
 import "./App.css";
 
 /* ================================
-   Data
+   ENV / API BASE (สำคัญ!)
+================================ */
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
+/* ================================
+   Data (ตัวอย่างรูปจาก public/images)
 ================================ */
 const HEROES = [
   {
@@ -49,6 +54,59 @@ const PROMOS = [
   { id: 3, name: "ข้าวกุ้งผัดพริกขี้หนูสวน", price: "50 บาท", img: "/images/p3.png" },
   { id: 4, name: "หมี่ไก่ฉีก",            price: "50 บาท", img: "/images/p2.png" },
 ];
+
+/* ================================
+   HealthBadge (ตัวเช็คสุขภาพ API)
+================================ */
+function HealthBadge() {
+  const [state, setState] = useState({ ok: false, msg: "checking...", code: 0 });
+
+  useEffect(() => {
+    let abort = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(`${API_BASE}/healthz`, {
+          signal: abort.signal,
+          credentials: "include",
+          headers: { "Accept": "application/json" },
+        });
+        let body = {};
+        try { body = await res.json(); } catch {}
+        setState({ ok: res.ok, msg: `OK ${res.status} @ ${API_BASE}`, code: res.status });
+        // แสดงใน console เผื่อดีบัก
+        console.log("HEALTHZ:", res.status, body);
+      } catch (e) {
+        setState({ ok: false, msg: `FAIL: ${e?.message || e}`, code: 0 });
+        console.warn("HEALTHZ FAIL:", e);
+      }
+    })();
+    return () => abort.abort();
+  }, []);
+
+  const style = {
+    position: "fixed",
+    bottom: 8,
+    right: 8,
+    zIndex: 9999,
+    padding: "6px 10px",
+    borderRadius: 10,
+    background: state.ok ? "rgba(0,160,80,.92)" : "rgba(200,0,0,.92)",
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: 600,
+    boxShadow: "0 4px 18px rgba(0,0,0,.18)",
+    backdropFilter: "blur(6px)",
+    WebkitBackdropFilter: "blur(6px)",
+    maxWidth: "60vw",
+    lineHeight: 1.4
+  };
+
+  return (
+    <div style={style} role="status" aria-live="polite">
+      API: {state.msg}
+    </div>
+  );
+}
 
 /* ================================
    Home + MobileMenu
@@ -231,6 +289,9 @@ function Home() {
           </Link>
         </div>
       </div>
+
+      {/* Health checker badge */}
+      <HealthBadge />
     </div>
   );
 }
