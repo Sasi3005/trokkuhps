@@ -141,7 +141,22 @@ export default function Foods(){
       {!canOrder && <NeedTableNotice />}
 
       <main className="fd-container fd-container--fluid" role="main">
-        <h2 className="fd-sectionTitle">เมนูอาหาร</h2>
+        <section className="fd-hero" aria-label="เมนูอาหาร">
+          <div className="fd-hero__copy">
+            <p><span /> TROK KU KPS · FOOD MENU</p>
+            <h1>เลือกจานโปรด<br /><em>แล้วอิ่มอร่อยไปด้วยกัน</em></h1>
+            <small>ทำสดทุกจาน · พร้อมเสิร์ฟทุกความอร่อย</small>
+          </div>
+          <div className="fd-hero__table" aria-label={`หมายเลขโต๊ะ ${tableLabel || "ยังไม่ได้เลือก"}`}>
+            <span>YOUR TABLE</span><strong>{tableLabel || "—"}</strong><small>{tableLabel ? "พร้อมสั่งอาหาร" : "กรุณาจองโต๊ะก่อน"}</small>
+          </div>
+          <div className="fd-hero__visual" aria-hidden="true">
+            <span>FRESH<br />&amp; HOT</span>
+            <img src="/images/p1.png" alt="" />
+          </div>
+        </section>
+
+        <div className="fd-menu-heading"><div><p>FRESH FROM THE KITCHEN</p><h2 className="fd-sectionTitle">เมนูอาหาร</h2></div><span>{!loading && `${items.length} เมนู`}</span></div>
 
         <div className="fd-searchWrap" role="search">
           <span className="fd-searchIcon" aria-hidden>🔎</span>

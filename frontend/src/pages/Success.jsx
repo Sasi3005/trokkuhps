@@ -1,88 +1,56 @@
-// src/pages/Success.jsx
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Success.css";
 
 export default function Success() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const {
-    tableNo,
-    zone,   // จาก ConfirmBooking ส่งค่าเป็นภาษาไทยแล้ว เช่น "โซนในร้าน"
-    name,
-    date,
-    time,
-    phone,
-  } = location.state || {};
-
+  const { tableNo, zone, name, date, time, phone } = location.state || {};
   const missingState = !tableNo || !zone || !name || !date || !time || !phone;
 
   if (missingState) {
-    // ถ้าเข้าหน้านี้ตรง ๆ โดยไม่มี state ให้พากลับไปจองใหม่
     return (
-      <div className="success-page">
-        <div className="success-card">
-          <div className="icon warn">!</div>
-          <h2>ไม่พบข้อมูลการจอง</h2>
-          <p className="muted">โปรดกลับไปเลือกโต๊ะและกรอกรายละเอียดใหม่อีกครั้ง</p>
-          <div className="btn-row">
-            <button className="btn primary" onClick={() => navigate("/booking")}>
-              ไปหน้าเลือกโต๊ะ
-            </button>
-            <button className="btn ghost" onClick={() => navigate("/")}>
-              กลับหน้าแรก
-            </button>
+      <main className="success-page">
+        <section className="success-card success-card--missing">
+          <div className="success-symbol success-symbol--warn" aria-hidden="true">!</div>
+          <span className="success-eyebrow">TROK KU KPS · RESERVATION</span>
+          <h1>ไม่พบข้อมูลการจอง</h1>
+          <p className="success-lead">โปรดกลับไปเลือกโต๊ะและกรอกรายละเอียดใหม่อีกครั้ง</p>
+          <div className="success-actions">
+            <button className="success-button success-button--primary" onClick={() => navigate("/booking")} type="button">ไปหน้าเลือกโต๊ะ <span>→</span></button>
+            <button className="success-button success-button--secondary" onClick={() => navigate("/")} type="button">กลับหน้าแรก</button>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     );
   }
 
   return (
-    <div className="success-page">
-      <div className="success-card">
-        <div className="icon ok" aria-hidden="true">✓</div>
-        <h2>จองสำเร็จ!</h2>
-        <p className="muted">ระบบบันทึกคำขอของคุณเรียบร้อยแล้ว</p>
+    <main className="success-page">
+      <section className="success-card">
+        <div className="success-topline"><span className="success-eyebrow">TROK KU KPS · RESERVATION</span><span className="success-status"><i /> ยืนยันแล้ว</span></div>
+        <div className="success-symbol" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="m8 16 5.2 5.2L24 10.8" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
+        <h1>จองสำเร็จ!</h1>
+        <p className="success-lead">ระบบบันทึกคำขอของคุณเรียบร้อยแล้ว</p>
 
-        <div className="summary">
-          {/* --- เอาแถว "รหัสการจอง" ออกแล้ว --- */}
-          <div className="row">
-            <span className="label">ผู้จอง</span>
-            <span className="value">{name}</span>
-          </div>
-          <div className="row">
-            <span className="label">วันที่ / เวลา</span>
-            <span className="value">{date} เวลา {time} น.</span>
-          </div>
-          <div className="row">
-            <span className="label">โต๊ะ</span>
-            <span className="value">{tableNo}</span>
-          </div>
-          <div className="row">
-            <span className="label">โซน</span>
-            <span className="value">{zone}</span>
-          </div>
-          <div className="row">
-            <span className="label">เบอร์โทร</span>
-            <span className="value">{phone}</span>
-          </div>
+        <div className="success-table">
+          <span className="success-table-icon" aria-hidden="true">▦</span>
+          <span><small>โต๊ะที่จอง</small><strong>{tableNo}</strong><em>{zone}</em></span>
+          <span className="success-table-check" aria-hidden="true">✓</span>
         </div>
 
-        {/* ปรับข้อความแนะนำ ไม่อ้างถึง "รหัสการจอง" แล้ว */}
-        <div className="tip">
-          โปรดแสดงรายละเอียดนี้ให้พนักงานเมื่อมาถึงร้าน หรือเก็บภาพหน้าจอไว้เป็นหลักฐาน
-        </div>
+        <section className="success-details" aria-label="รายละเอียดการจอง">
+          <div className="success-details-heading"><span>BOOKING DETAILS</span><strong>รายละเอียดการจอง</strong></div>
+          <div className="success-row"><span className="success-row-icon" aria-hidden="true">♙</span><span className="success-label">ผู้จอง</span><strong className="success-value">{name}</strong></div>
+          <div className="success-row"><span className="success-row-icon" aria-hidden="true">◷</span><span className="success-label">วันที่ / เวลา</span><strong className="success-value">{date} เวลา {time} น.</strong></div>
+          <div className="success-row"><span className="success-row-icon" aria-hidden="true">☎</span><span className="success-label">เบอร์โทร</span><strong className="success-value">{phone}</strong></div>
+        </section>
 
-        <div className="btn-row">
-          <button className="btn primary" onClick={() => navigate("/")}>
-            กลับหน้าแรก
-          </button>
-          <button className="btn ghost" onClick={() => navigate("/booking")}>
-            จองเพิ่ม
-          </button>
+        <div className="success-tip"><span aria-hidden="true">ℹ</span><p>โปรดแสดงรายละเอียดการจองนี้ให้พนักงานเมื่อมาถึงร้าน หรือเก็บภาพหน้าจอไว้เป็นหลักฐาน</p></div>
+        <div className="success-actions">
+          <button className="success-button success-button--primary" onClick={() => navigate("/")} type="button">กลับหน้าแรก <span>→</span></button>
+          <button className="success-button success-button--secondary" onClick={() => navigate("/booking")} type="button">จองโต๊ะเพิ่ม</button>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }

@@ -132,7 +132,12 @@ export default function Snacks(){
       {!canOrder && <NeedTableNotice />}
 
       <main className="fd-container">
-        <h2 className="fd-sectionTitle">เมนูของทานเล่น</h2>
+        <section className="fd-hero" aria-label="เมนูของทานเล่น">
+          <div className="fd-hero__copy"><p><span /> TROK KU KPS · SNACKS</p><h1>อร่อยเพลิน<br /><em>ทุกช่วงเวลาของคุณ</em></h1><small>ของทานเล่นกรอบอร่อย · เสิร์ฟสดทุกออเดอร์</small></div>
+          <div className="fd-hero__table"><span>YOUR TABLE</span><strong>{tableLabel || "—"}</strong><small>{tableLabel ? "พร้อมสั่งของทานเล่น" : "กรุณาจองโต๊ะก่อน"}</small></div>
+          <div className="fd-hero__visual" aria-hidden="true"><span>SNACK<br />TIME</span><img src="/images/a2.png" alt="" /></div>
+        </section>
+        <div className="fd-menu-heading"><div><p>CRISPY · TASTY · SHAREABLE</p><h2 className="fd-sectionTitle">เมนูของทานเล่น</h2></div><span>{!loading && `${items.length} เมนู`}</span></div>
 
         <div className="fd-searchWrap" role="search">
           <span className="fd-searchIcon" aria-hidden>🔎</span>

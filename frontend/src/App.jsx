@@ -109,27 +109,11 @@ function HealthBadge() {
     return () => abort.abort();
   }, []);
 
-  const style = {
-    position: "fixed",
-    bottom: 8,
-    right: 8,
-    zIndex: 9999,
-    padding: "6px 10px",
-    borderRadius: 10,
-    background: state.ok ? "rgba(0,160,80,.92)" : "rgba(200,0,0,.92)",
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: 600,
-    boxShadow: "0 4px 18px rgba(0,0,0,.18)",
-    backdropFilter: "blur(6px)",
-    WebkitBackdropFilter: "blur(6px)",
-    maxWidth: "60vw",
-    lineHeight: 1.4,
-  };
+  const label = state.ok ? "ระบบพร้อมให้บริการ" : state.code ? "ตรวจพบปัญหาการเชื่อมต่อ" : "กำลังเชื่อมต่อระบบ";
 
   return (
-    <div style={style} role="status" aria-live="polite">
-      API: {state.msg}
+    <div className={`home-api-status ${state.ok ? "is-online" : "is-checking"}`} role="status" aria-live="polite" title={state.msg}>
+      <i aria-hidden="true" />{label}
     </div>
   );
 }
@@ -139,189 +123,129 @@ function HealthBadge() {
 ================================ */
 function Home() {
   const [index, setIndex] = useState(0);
-  const timerRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const timerRef = useRef(null);
+  const slide = HEROES[index];
 
-  const next = () => setIndex((i) => (i + 1) % HEROES.length);
-  const prev = () => setIndex((i) => (i - 1 + HEROES.length) % HEROES.length);
-  const goTo = (i) => setIndex(i);
+  const next = () => setIndex((current) => (current + 1) % HEROES.length);
+  const prev = () => setIndex((current) => (current - 1 + HEROES.length) % HEROES.length);
+  const stopAuto = () => {
+    if (timerRef.current) window.clearInterval(timerRef.current);
+    timerRef.current = null;
+  };
+  const startAuto = () => {
+    stopAuto();
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    timerRef.current = window.setInterval(() => setIndex((current) => (current + 1) % HEROES.length), 5200);
+  };
 
   useEffect(() => {
     startAuto();
     return stopAuto;
   }, [index]);
 
-  const startAuto = () => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    stopAuto();
-    timerRef.current = setInterval(() => setIndex((i) => (i + 1) % HEROES.length), 4200);
-  };
-  const stopAuto = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = null;
-  };
-
   useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === "ArrowRight") next();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "Escape") setMenuOpen(false);
+    const onKeyDown = (event) => {
+      if (event.key === "ArrowRight") next();
+      if (event.key === "ArrowLeft") prev();
+      if (event.key === "Escape") setMenuOpen(false);
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   useEffect(() => {
     document.documentElement.style.overflow = menuOpen ? "hidden" : "";
-    return () => (document.documentElement.style.overflow = "");
+    return () => { document.documentElement.style.overflow = ""; };
   }, [menuOpen]);
 
-  const slide = HEROES[index];
-
   return (
-    <div className="page">
-      {/* NAVBAR */}
-      <header className="topbar">
-        <div className="container">
-          <Link to="/" className="brand" aria-label="กลับสู่หน้าแรก">
-            <span className="brand__dot" />
-            <span className="brand__name">TROK</span>
-            <span className="brand__tag">KU KPS</span>
-          </Link>
-
-          {/* Desktop nav */}
-          <nav className="topnav" aria-label="เมนูหลัก">
-            <KeepTableLink className="topnav__link" to="/foods">เมนูอาหาร</KeepTableLink>
-            <KeepTableLink className="topnav__link" to="/snacks">ของทานเล่น</KeepTableLink>
-            <KeepTableLink className="topnav__link" to="/drinks">เครื่องดื่ม</KeepTableLink>
-            <KeepTableLink className="topnav__cta" to="/booking">จองโต๊ะ</KeepTableLink>
-          </nav>
-
-          {/* Mobile menu button */}
-          <button
-            className="menu-btn"
-            aria-label="เปิดเมนู"
-            aria-controls="mobile-drawer"
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen(true)}
-            type="button"
-          >
-            <span className="menu-btn__bar" />
-            <span className="menu-btn__bar" />
-            <span className="menu-btn__bar" />
+    <div className="home-page">
+      <header className="home-header">
+        <Link to="/" className="home-brand" aria-label="TROK KU KPS หน้าแรก">
+          <span className="home-brand__mark" aria-hidden="true"><i /><i /><i /></span>
+          <span className="home-brand__word">TROK<small>KU KPS</small></span>
+        </Link>
+        <nav className="home-nav" aria-label="เมนูหลัก">
+          <KeepTableLink to="/foods">อาหาร</KeepTableLink>
+          <KeepTableLink to="/snacks">ของทานเล่น</KeepTableLink>
+          <KeepTableLink to="/drinks">เครื่องดื่ม</KeepTableLink>
+        </nav>
+        <div className="home-header__actions">
+          <span className="home-open"><i /> เปิดให้บริการ</span>
+          <KeepTableLink className="home-booking" to="/booking">จองโต๊ะ <b aria-hidden="true">↗</b></KeepTableLink>
+          <Link className="home-admin" to="/admin/login" state={{ from: { pathname: "/admin" } }}>เข้าสู่ระบบแอดมิน <span aria-hidden="true">↗</span></Link>
+          <button className="home-menu-toggle" aria-label={menuOpen ? "ปิดเมนู" : "เปิดเมนู"} aria-expanded={menuOpen} aria-controls="home-mobile-menu" onClick={() => setMenuOpen((open) => !open)} type="button">
+            <span /><span />
           </button>
         </div>
       </header>
 
-      {/* Mobile Drawer */}
-      <div
-        id="mobile-drawer"
-        className={`mobile-drawer ${menuOpen ? "open" : ""}`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="เมนูนำทาง"
-      >
-        <div className="mobile-drawer__header">
-          <span className="brand__name">TROK</span>
-          <button className="drawer-close" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)} type="button">✕</button>
-        </div>
-        <nav className="mobile-drawer__nav">
-          <KeepTableLink to="/foods"  onClick={() => setMenuOpen(false)}>🍚 เมนูอาหาร</KeepTableLink>
-          <KeepTableLink to="/snacks" onClick={() => setMenuOpen(false)}>🍟 ของทานเล่น</KeepTableLink>
-          <KeepTableLink to="/drinks" onClick={() => setMenuOpen(false)}>🥤 เครื่องดื่ม</KeepTableLink>
-          <KeepTableLink className="mobile-drawer__cta" to="/booking" onClick={() => setMenuOpen(false)}>จองโต๊ะ</KeepTableLink>
+      {menuOpen && <button className="home-menu-scrim" aria-label="ปิดเมนู" onClick={() => setMenuOpen(false)} type="button" />}
+      <aside id="home-mobile-menu" className={`home-mobile-menu ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen}>
+        <div className="home-mobile-menu__top"><span>สำรวจเมนู</span><button onClick={() => setMenuOpen(false)} aria-label="ปิดเมนู" type="button">×</button></div>
+        <nav aria-label="เมนูมือถือ">
+          <KeepTableLink to="/foods" onClick={() => setMenuOpen(false)}>อาหาร <b>01</b></KeepTableLink>
+          <KeepTableLink to="/snacks" onClick={() => setMenuOpen(false)}>ของทานเล่น <b>02</b></KeepTableLink>
+          <KeepTableLink to="/drinks" onClick={() => setMenuOpen(false)}>เครื่องดื่ม <b>03</b></KeepTableLink>
+          <KeepTableLink className="home-mobile-menu__book" to="/booking" onClick={() => setMenuOpen(false)}>จองโต๊ะ <span>↗</span></KeepTableLink>
+          <Link className="home-mobile-menu__admin" to="/admin/login" state={{ from: { pathname: "/admin" } }} onClick={() => setMenuOpen(false)}>เข้าสู่ระบบผู้ดูแล <span>↗</span></Link>
         </nav>
-      </div>
-      {menuOpen && <div className="drawer-backdrop" onClick={() => setMenuOpen(false)} />}
+        <span className="home-mobile-menu__note">GOOD FOOD, GOOD MOOD.</span>
+      </aside>
 
-      {/* HERO */}
-      <section
-        className="hero"
-        onMouseEnter={stopAuto}
-        onMouseLeave={startAuto}
-        aria-roledescription="carousel"
-        aria-label="เมนูแนะนำ"
-      >
-        <div className="hero__bg" aria-hidden />
-        <div className="hero__glass">
-          <button className="nav-btn left" aria-label="ก่อนหน้า" onClick={prev} type="button">‹</button>
-
-          <div className="hero__imgWrap" aria-live="polite">
-            <img src={slide.img} alt={slide.alt} loading="eager" />
-          </div>
-
-          <div className="hero__text">
-            <p className="hero__eyebrow">เมนูแนะนำประจำวัน</p>
-            <h1 className="hero__title">
-              {slide.title.split("\n").map((t, i, a) => (
-                <span key={i}>
-                  {t}
-                  {i < a.length - 1 && <br />}
-                </span>
-              ))}
-            </h1>
-            <p className="hero__price">เพียง <strong>{slide.price}</strong></p>
-            <div className="hero__ctaRow">
-              <KeepTableLink className="btn btn--primary" to="/foods">ดูเมนูอาหาร</KeepTableLink>
-              <KeepTableLink className="btn btn--ghost" to="/drinks">สั่งเครื่องดื่ม</KeepTableLink>
+      <main>
+        <section className="home-hero" aria-roledescription="carousel" aria-label="เมนูเด่นประจำวัน" onMouseEnter={stopAuto} onMouseLeave={startAuto}>
+          <div className="home-hero__copy">
+            <p className="home-overline"><span /> TROK KU KPS <b>·</b> GOOD FOOD, GOOD MOOD</p>
+            <p className="home-hero__eyebrow">เมนูเด่นประจำวัน <span>0{index + 1} / 0{HEROES.length}</span></p>
+            <h1>{slide.title.split("\n").map((line, lineIndex, lines) => <span key={line}>{line}{lineIndex < lines.length - 1 && <br />}</span>)}</h1>
+            <p className="home-hero__description">อิ่มอร่อยกับเมนูทำสด วัตถุดิบดี และรสชาติที่อยากกลับมาซ้ำ</p>
+            <div className="home-hero__price"><span>เริ่มต้นเพียง</span><strong>{slide.price.replace(" บาท", "")}</strong><small>บาท</small></div>
+            <div className="home-hero__actions">
+              <KeepTableLink className="home-button home-button--primary" to="/foods">เลือกเมนูอาหาร <span>↗</span></KeepTableLink>
+              <KeepTableLink className="home-button home-button--quiet" to="/drinks">ดูเครื่องดื่ม</KeepTableLink>
+            </div>
+            <div className="home-hero__controls" aria-label="ควบคุมเมนูเด่น">
+              <button onClick={prev} type="button" aria-label="เมนูก่อนหน้า">←</button>
+              {HEROES.map((hero, heroIndex) => <button key={hero.img} className={`home-hero__indicator ${index === heroIndex ? "is-active" : ""}`} onClick={() => setIndex(heroIndex)} aria-label={`ดูเมนูเด่น ${heroIndex + 1}`} aria-pressed={index === heroIndex} type="button" />)}
+              <button onClick={next} type="button" aria-label="เมนูถัดไป">→</button>
+              <span>เลื่อนเพื่อค้นพบเมนูโปรด</span>
             </div>
           </div>
 
-          <button className="nav-btn right" aria-label="ถัดไป" onClick={next} type="button">›</button>
-        </div>
+          <div className="home-hero__art" aria-live="polite">
+            <div className="home-hero__art-ring" />
+            <span className="home-hero__art-index">TASTE<br />NO. 0{index + 1}</span>
+            <img src={slide.img} alt={slide.alt} />
+            <span className="home-hero__art-caption">ปรุงสด · เสิร์ฟร้อน</span>
+            <span className="home-hero__spark home-hero__spark--one">✳</span>
+            <span className="home-hero__spark home-hero__spark--two">✳</span>
+          </div>
+          <span className="home-hero__side-note">KASETSART UNIVERSITY · KAMPHAENG SAEN</span>
+        </section>
 
-        <div className="dots" role="tablist" aria-label="ตัวเลือกสไลด์">
-          {HEROES.map((_, i) => (
-            <button
-              key={i}
-              className={`dot ${i === index ? "active" : ""}`}
-              aria-label={`ไปสไลด์ที่ ${i + 1}`}
-              aria-selected={i === index}
-              role="tab"
-              onClick={() => goTo(i)}
-              type="button"
-            />
-          ))}
-        </div>
-      </section>
+        <section className="home-picks" aria-labelledby="home-picks-title">
+          <div className="home-picks__heading">
+            <div><p>MADE FOR YOUR NEXT BITE</p><h2 id="home-picks-title">จานโปรดที่อยากให้ลอง</h2></div>
+            <KeepTableLink to="/foods" className="home-picks__all">ดูเมนูทั้งหมด <span>↗</span></KeepTableLink>
+          </div>
+          <div className="home-picks__grid">
+            {PROMOS.map((item, itemIndex) => (
+              <KeepTableLink key={item.id} className="home-dish" to="/foods" aria-label={`เลือก${item.name}`}>
+                <div className="home-dish__visual"><img src={item.img} alt={item.name} loading="lazy" /><span className="home-dish__number">0{itemIndex + 1}</span><span className="home-dish__price">{item.price}</span></div>
+                <div className="home-dish__info"><h3>{item.name}</h3><span>เลือกจานนี้ <b>↗</b></span></div>
+              </KeepTableLink>
+            ))}
+          </div>
+        </section>
+      </main>
 
-      {/* PROMOTIONS */}
-      <section className="section container">
-        <h2 className="section__title">
-          เมนูแนะนำ
-          <span className="section__pulse" aria-hidden />
-        </h2>
-        <div className="grid">
-          {PROMOS.map((p) => (
-            <div key={p.id} className="card">
-              <div className="card__imgWrap">
-                <div className="card__halo" />
-                <img src={p.img} alt={p.name} loading="lazy" />
-              </div>
-              <div className="card__body">
-                <h3 className="card__name">{p.name}</h3>
-                <span className="badge">{p.price}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Admin link */}
-      <div className="container">
-        <div className="tiny-admin">
-          <Link to="/admin/login" state={{ from: { pathname: "/admin" } }}>
-            เข้าสู่ระบบผู้ดูแล
-          </Link>
-        </div>
-      </div>
-
-      {/* Health checker badge */}
+      <footer className="home-footer"><Link to="/" className="home-footer__brand">TROK <span>KU KPS</span></Link><span>อร่อยง่าย ๆ ใกล้รั้วเกษตร</span><Link to="/admin/login" state={{ from: { pathname: "/admin" } }}>สำหรับผู้ดูแล</Link></footer>
       <HealthBadge />
     </div>
   );
 }
-
 /* ================================
    /order alias → /drinks (แปลง tableId → table)
 ================================ */

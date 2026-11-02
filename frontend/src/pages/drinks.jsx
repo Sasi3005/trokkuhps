@@ -156,7 +156,12 @@ export default function Drinks(){
       {!canOrder && <NeedTableNotice />}
 
       <main className="fd-container" role="main">
-        <h2 className="fd-sectionTitle">เมนูเครื่องดื่ม</h2>
+        <section className="fd-hero" aria-label="เมนูเครื่องดื่ม">
+          <div className="fd-hero__copy"><p><span /> TROK KU KPS · DRINKS</p><h1>เติมความสดชื่น<br /><em>ให้ทุกมื้อของคุณ</em></h1><small>เครื่องดื่มเย็นชื่นใจ · เลือกอุณหภูมิได้ตามใจ</small></div>
+          <div className="fd-hero__table"><span>YOUR TABLE</span><strong>{tableLabel || "—"}</strong><small>{tableLabel ? "พร้อมสั่งเครื่องดื่ม" : "กรุณาจองโต๊ะก่อน"}</small></div>
+          <div className="fd-hero__visual" aria-hidden="true"><span>SIP<br />HAPPY</span><img src="/images/p3.png" alt="" /></div>
+        </section>
+        <div className="fd-menu-heading"><div><p>BREWED FOR YOUR GOOD MOOD</p><h2 className="fd-sectionTitle">เมนูเครื่องดื่ม</h2></div><span>{!loading && `${items.length} เมนู`}</span></div>
 
         <div className="fd-searchWrap" role="search">
           <span className="fd-searchIcon" aria-hidden>🔎</span>

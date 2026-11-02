@@ -7,166 +7,118 @@ const ZONES = ["โซนในร้าน", "โซนนอกร้าน"];
 const INSIDE_MAX = 18;
 
 function deriveZoneFromLabel(label = "") {
-  const m = String(label).match(/(\d+)/);
-  const n = m ? Number(m[1]) : NaN;
-  if (Number.isNaN(n)) return "โซนในร้าน";
-  return n <= INSIDE_MAX ? "โซนในร้าน" : "โซนนอกร้าน";
+  const tableNumber = Number(String(label).match(/(\d+)/)?.[1]);
+  return Number.isNaN(tableNumber) || tableNumber <= INSIDE_MAX ? "โซนในร้าน" : "โซนนอกร้าน";
 }
 
 export default function Booking() {
   const navigate = useNavigate();
-  const [sp] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [tables, setTables] = useState([]);
   const [selected, setSelected] = useState(null);
   const [zone, setZone] = useState("โซนในร้าน");
+  const [highlight, setHighlight] = useState(searchParams.get("highlight") || "");
 
-  const [highlight, setHighlight] = useState(sp.get("highlight") || "");
-
-  // โหลดโต๊ะจาก DB
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
         setLoading(true);
         setError("");
-        const r = await fetch(`${API_BASE}/tables`);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const data = await r.json();
-
-        const normalized = (Array.isArray(data) ? data : []).map((t) => ({
-          id: t.table_id,
-          number: t.table_number || `T${t.table_id}`,
-          status: t.status || "ว่าง",
-          zone: t.zone && t.zone.trim() !== "" ? t.zone.trim() : deriveZoneFromLabel(t.table_number || ""),
-        }));
-
-        const ordered = normalized.sort((a, b) => {
-          const na = Number(a.number.match(/\d+/)?.[0] ?? 1e9);
-          const nb = Number(b.number.match(/\d+/)?.[0] ?? 1e9);
-          return na - nb;
-        });
-
+        const response = await fetch(`${API_BASE}/tables`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const ordered = (Array.isArray(data) ? data : []).map((table) => ({
+          id: table.table_id,
+          number: table.table_number || `T${table.table_id}`,
+          status: table.status || "ว่าง",
+          zone: table.zone?.trim() || deriveZoneFromLabel(table.table_number || ""),
+        })).sort((a, b) => Number(a.number.match(/\d+/)?.[0] ?? 1e9) - Number(b.number.match(/\d+/)?.[0] ?? 1e9));
         if (alive) setTables(ordered);
-      } catch (e) {
-        if (alive) setError(e.message || "โหลดข้อมูลโต๊ะไม่สำเร็จ");
+      } catch (requestError) {
+        if (alive) setError(requestError.message || "โหลดข้อมูลโต๊ะไม่สำเร็จ");
       } finally {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false };
+    return () => { alive = false; };
   }, []);
 
-  // auto-clear highlight
   useEffect(() => {
-    if (!highlight) return;
-    const t = setTimeout(() => setHighlight(""), 2500);
-    return () => clearTimeout(t);
+    if (!highlight) return undefined;
+    const timer = setTimeout(() => setHighlight(""), 2500);
+    return () => clearTimeout(timer);
   }, [highlight]);
 
-  // filter tables ตาม zone (trim ป้องกัน space)
-  const visibleTables = useMemo(
-    () => tables.filter(t => t.zone?.trim() === zone.trim()),
-    [tables, zone]
-  );
+  const visibleTables = useMemo(() => tables.filter((table) => table.zone?.trim() === zone.trim()), [tables, zone]);
+  const isReserved = (table) => table.status === "จองแล้ว" || table.status === "กำลังใช้งาน";
+  const countBusy = visibleTables.filter(isReserved).length;
+  const countFree = visibleTables.length - countBusy;
 
-  const countAll = visibleTables.length;
-  const countBusy = visibleTables.filter(t => t.status === "จองแล้ว" || t.status === "กำลังใช้งาน").length;
-  const countFree = countAll - countBusy;
-
-  // reset selected ถ้าเปลี่ยน zone
   useEffect(() => {
-    if (selected && !visibleTables.some(t => t.number === selected)) setSelected(null);
+    if (selected && !visibleTables.some((table) => table.number === selected)) setSelected(null);
   }, [zone, visibleTables, selected]);
 
-  const isReserved = (t) => t.status === "จองแล้ว" || t.status === "กำลังใช้งาน";
-  const onPick = (t) => { if (isReserved(t)) return; setSelected(p => p === t.number ? null : t.number); };
-  const onConfirm = (e) => {
-    e.preventDefault();
-    if (!selected) return alert("โปรดเลือกโต๊ะก่อน");
+  const onConfirm = (event) => {
+    event.preventDefault();
+    if (!selected) return;
     navigate("/confirm", { state: { tableNo: selected, zone } });
   };
 
   return (
-    <div className="booking-page">
-      <header className="bk-titlebar">
-        <button className="bk-back" onClick={() => navigate(-1)} aria-label="ย้อนกลับ">
-          <svg viewBox="0 0 24 24" width="20" height="20">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />
-          </svg>
+    <main className="booking-page">
+      <header className="booking-hero">
+        <button className="booking-back" onClick={() => navigate(-1)} type="button" aria-label="ย้อนกลับ">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14.5 5-7 7 7 7" /></svg>
         </button>
-        <h1>จองโต๊ะ</h1>
+        <div className="booking-hero__copy">
+          <p><span /> TROK KU KPS · RESERVATION</p>
+          <h1>เลือกโต๊ะที่ใช่<br /><em>สำหรับมื้อของคุณ</em></h1>
+        </div>
+        <div className="booking-hero__badge"><span>STEP</span><strong>01</strong><small>/ 02</small></div>
       </header>
 
-      {/* zone selector */}
-      <section className="bk-zones">
-        {ZONES.map(z => (
-          <button
-            key={z}
-            className={`bk-zone ${zone === z ? "active" : ""}`}
-            onClick={() => setZone(z)}
-            type="button"
-          >
-            <span className="dot" aria-hidden="true" />{z}
-          </button>
-        ))}
-      </section>
-
-      {/* stats */}
-      <section className="bk-stats">
-        <div className="stat"><div className="stat__label">ทั้งหมด</div><div className="stat__value">{countAll}</div></div>
-        <div className="stat"><div className="stat__label">ว่าง</div><div className="stat__value">{countFree}</div></div>
-        <div className="stat"><div className="stat__label">จองแล้ว / กำลังใช้งาน</div><div className="stat__value">{countBusy}</div></div>
-      </section>
-
-      <div className="bk-legend top"><span className="bar" aria-hidden="true" />เวที</div>
-
-      {/* table map */}
-      <section className="bk-map">
-        {loading && <div className="bk-loading"><div className="shimmer" />กำลังโหลดโต๊ะ…</div>}
-        {error && <div className="bk-error">{error}</div>}
-
-        {!loading && !error && (
-          <div className="seat-grid" role="list" aria-label={`ผังโต๊ะ (${zone})`}>
-            {visibleTables.map(t => {
-              const reserved = isReserved(t);
-              const isHL = highlight && t.number === highlight;
-              const isSel = selected === t.number;
-              return (
-                <button
-                  key={t.id}
-                  className={`seat
-                    ${reserved ? t.status === "กำลังใช้งาน" ? "seat--busy" : "seat--reserved" : ""}
-                    ${isSel ? "seat--selected" : ""}
-                    ${isHL ? "seat--hl" : ""}`}
-                  onClick={() => onPick(t)}
-                  type="button"
-                  disabled={reserved}
-                  aria-label={reserved ? `${t.number} ${t.status}` : `โต๊ะ ${t.number}`}
-                  title={reserved ? t.status : `เลือกโต๊ะ ${t.number}`}
-                  role="listitem"
-                >
-                  <span className="seat__num">{t.number}</span>
-                  <span className="seat__status">{t.status}</span>
-                </button>
-              );
-            })}
+      <section className="booking-content" aria-label="เลือกโต๊ะ">
+        <div className="booking-content__top">
+          <div>
+            <p className="booking-kicker">SELECT YOUR AREA</p>
+            <h2>เลือกโซนที่ต้องการ</h2>
           </div>
-        )}
-      </section>
-
-      <div className="bk-legend bottom"><span className="bar" aria-hidden="true" />ประตูร้าน</div>
-
-      {/* confirm */}
-      <form onSubmit={onConfirm} className="bk-actions">
-        <div className="bk-summary" aria-live="polite">
-          โต๊ะที่เลือก: <strong>{selected ?? "-"}</strong>
-          <span className="sep">•</span>
-          โซน: <strong>{zone}</strong>
+          <div className="booking-zones" role="group" aria-label="โซนที่นั่ง">
+            {ZONES.map((item) => <button key={item} className={zone === item ? "is-active" : ""} onClick={() => setZone(item)} type="button"><span aria-hidden="true" />{item}</button>)}
+          </div>
         </div>
-        <button className="bk-submit" type="submit" disabled={!selected}>ยืนยันการจอง</button>
-      </form>
-    </div>
+
+        <div className="booking-stats" aria-label="สรุปจำนวนโต๊ะ">
+          <div><span>โต๊ะในโซนนี้</span><strong>{visibleTables.length}</strong><small>โต๊ะ</small></div>
+          <div><span>พร้อมให้จอง</span><strong className="is-free">{countFree}</strong><small>โต๊ะ</small></div>
+          <div><span>ไม่ว่าง</span><strong className="is-busy">{countBusy}</strong><small>โต๊ะ</small></div>
+        </div>
+
+        <section className="booking-map">
+          <div className="booking-map__heading"><div><p>TABLE MAP</p><h2>{zone}</h2></div><div className="booking-map__key"><span><i className="is-free" />ว่าง</span><span><i className="is-reserved" />จองแล้ว</span><span><i className="is-busy" />กำลังใช้งาน</span></div></div>
+          <div className="booking-map__stage"><span>เวที</span></div>
+          {loading && <div className="booking-state"><i />กำลังโหลดผังโต๊ะ...</div>}
+          {error && <div className="booking-error">ไม่สามารถโหลดข้อมูลโต๊ะได้: {error}</div>}
+          {!loading && !error && <div className="booking-grid" role="list" aria-label={`ผังโต๊ะ ${zone}`}>
+            {visibleTables.map((table) => {
+              const reserved = isReserved(table);
+              const active = selected === table.number;
+              const className = ["booking-table", reserved ? (table.status === "กำลังใช้งาน" ? "is-busy" : "is-reserved") : "is-free", active && "is-selected", highlight === table.number && "is-highlighted"].filter(Boolean).join(" ");
+              return <button key={table.id} className={className} onClick={() => !reserved && setSelected((current) => current === table.number ? null : table.number)} type="button" disabled={reserved} role="listitem" aria-label={reserved ? `${table.number} ${table.status}` : `เลือกโต๊ะ ${table.number}`}><b>{table.number}</b><span>{reserved ? table.status : active ? "เลือกแล้ว" : "ว่าง"}</span></button>;
+            })}
+          </div>}
+          {!loading && !error && visibleTables.length === 0 && <div className="booking-state">ไม่พบโต๊ะในโซนนี้</div>}
+          <div className="booking-map__entry"><span>ทางเข้า</span></div>
+        </section>
+
+        <form onSubmit={onConfirm} className="booking-confirm">
+          <div className="booking-confirm__selection"><span>โต๊ะที่เลือก</span><strong>{selected || "ยังไม่ได้เลือก"}</strong><small>{selected ? zone : "เลือกโต๊ะว่างจากผังด้านบน"}</small></div>
+          <button type="submit" disabled={!selected}>ดำเนินการต่อ <span aria-hidden="true">→</span></button>
+        </form>
+      </section>
+    </main>
   );
 }

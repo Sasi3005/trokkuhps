@@ -221,25 +221,30 @@ export default function ConfirmBooking() {
   };
 
   return (
-    <div className="confirm-page">
-      <header className="confirm-header">
-        <button className="bk-back" onClick={handleBack} aria-label="ย้อนกลับ">←</button>
-        <h2>ยืนยันการจอง</h2>
-        <div></div>
+    <div className="confirm-page confirm-page--blue">
+            <header className="confirm-header">
+        <button className="bk-back" onClick={handleBack} aria-label="ย้อนกลับ" type="button">←</button>
+        <div className="confirm-heading"><span>YOUR TABLE IS WAITING</span><h1>ยืนยันการจอง</h1></div>
+        <span className="confirm-heading-mark" aria-hidden="true">✦</span>
       </header>
 
+      <section className="confirm-welcome">
+        <div><span className="confirm-kicker">เกือบเรียบร้อยแล้ว</span><h2>แจ้งรายละเอียดการจอง</h2><p>กรอกข้อมูลและแนบสลิปเพื่อยืนยันโต๊ะของคุณ</p></div>
+        <span className="confirm-welcome-icon" aria-hidden="true">✓</span>
+      </section>
+
+      <nav className="confirm-steps" aria-label="ขั้นตอนการจอง">
+        <span className="is-done"><i>✓</i><b>เลือกโต๊ะ</b></span><em></em><span className="is-current"><i>02</i><b>ข้อมูลและชำระเงิน</b></span><em></em><span><i>03</i><b>เสร็จสิ้น</b></span>
+      </nav>
+
       <section className="summary-card">
-        <div className="left">
-          <div className="badge">โต๊ะที่เลือก</div>
-          <div className="table-no">{rawTableNo}</div>
-        </div>
-        <div className="right">
-          <div className="zone">{zoneDisplay}</div>
-        </div>
+        <div className="summary-table-icon" aria-hidden="true">▦</div>
+        <div className="summary-details"><span className="summary-overline">โต๊ะที่คุณเลือก</span><strong className="table-no">{rawTableNo}</strong><span className="zone">{zoneDisplay}</span></div>
+        <span className="summary-check" aria-label="เลือกแล้ว">✓</span>
       </section>
 
       <form className="confirm-form" onSubmit={handleSubmit}>
-        <div className="grid-2">
+        <div className="form-intro"><span className="confirm-step-number">01</span><div><h2>ข้อมูลผู้จอง</h2><p>กรุณากรอกข้อมูลให้ครบถ้วน</p></div></div><div className="grid-2">
           <label className="field">
             <span className="field__label">เลขโต๊ะ</span>
             <input type="text" value={rawTableNo} readOnly />
@@ -251,8 +256,8 @@ export default function ConfirmBooking() {
         </div>
 
         <label className="field">
-          <span className="field__label">ผู้จอง</span>
-          <input name="name" value={form.name} onChange={handleChange} required />
+          <span className="field__label">ชื่อผู้จอง</span>
+          <input name="name" value={form.name} onChange={handleChange} placeholder="เช่น สมชาย ใจดี" autoComplete="name" required />
         </label>
 
         <div className="grid-2">
@@ -267,12 +272,14 @@ export default function ConfirmBooking() {
         </div>
 
         <label className="field">
-          <span className="field__label">เบอร์โทร</span>
-          <input type="tel" name="phone" value={form.phone} onChange={handleChange} pattern="[0-9]{9,10}" required />
+          <span className="field__label">เบอร์โทรศัพท์</span>
+          <input type="tel" name="phone" value={form.phone} onChange={handleChange} pattern="[0-9]{9,10}" placeholder="กรอกเบอร์โทร 9–10 หลัก" autoComplete="tel" required />
         </label>
 
         {/* Payment QR */}
+        <div className="confirm-divider"><span>02</span><div><strong>ชำระค่าจอง</strong><small>สแกน QR เพื่อชำระเงิน</small></div></div>
         <section className="payment-card">
+          <div className="payment-intro"><span className="payment-icon" aria-hidden="true">▦</span><div><strong>สแกนเพื่อชำระเงิน</strong><small>ใช้แอปธนาคารสแกน QR ด้านล่าง</small></div></div>
           {qrLoading && <div className="muted">กำลังโหลดคิวอาร์โค้ด…</div>}
           {!qrLoading && qrError && <div className="form-error">{qrError}</div>}
           {!qrLoading && !qrError && qr.src && (
@@ -283,13 +290,14 @@ export default function ConfirmBooking() {
         </section>
 
         {/* Slip Upload */}
+        <div className="confirm-divider"><span>03</span><div><strong>แนบหลักฐานการชำระเงิน</strong><small>อัปโหลดสลิปเพื่อส่งคำขอจอง</small></div></div>
         <div className="field upload">
           <div className="field__label">แนบสลิป</div>
 
           {/* ใช้ label แทน input */}
           <label className="upload__drop">
             <div className="icon">📎</div>
-            <div className="t1">ลากสลิปมาที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
+            <div className="t1">คลิกเพื่อเลือกไฟล์สลิป</div>
             <div className="t2">รองรับ JPG, PNG, WEBP, PDF, HEIC ขนาดไม่เกิน 5MB</div>
             <input
               ref={slipInputRef}
