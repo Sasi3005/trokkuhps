@@ -4,3 +4,9 @@ uploads/
 uploads/slips
 .DS_Store
 Thumbs.db
+
+.env
+.env.*
+!.env.example
+!.env.sample
+node_modules/

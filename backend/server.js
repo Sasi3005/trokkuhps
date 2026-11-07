@@ -1,28 +1,30 @@
-// backend/server.js
-"use strict";
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 require("dotenv").config();
 
 const app = express();
 
-/** ----- CORS ที่ตั้งค่าได้จาก ENV ----- */
 const ALLOW_ORIGINS = (process.env.CORS_ORIGIN || "")
   .split(",")
-  .map(s => s.trim())
+  .map((s) => s.trim())
   .filter(Boolean);
+
 const corsOptions = {
   origin(origin, cb) {
-    // ไม่มี origin (เช่น curl/health) = อนุญาต
     if (!origin) return cb(null, true);
-    if (ALLOW_ORIGINS.length === 0) return cb(null, true); // ไม่ตั้งค่าไว้ = อนุญาตทั้งหมด
+    if (ALLOW_ORIGINS.length === 0) return cb(null, true);
     if (ALLOW_ORIGINS.includes(origin)) return cb(null, true);
     return cb(null, false);
   },
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser());
+
+// จากจุดนี้คง health check และ route setup เดิมไว้
 
 /** ----- health check ต้องมาก่อนรวม routes ----- */
 app.get("/healthz", (_req, res) => {

@@ -120,7 +120,7 @@ export default function Snacks(){
   };
 
   return (
-    <div className="fd-page">
+    <div className="fd-page v2-menu-page v2-menu-snacks">
       <header className="fd-topbar">
         <button className="fd-back" onClick={()=>navigate(qs ? "/"+qs : "/")} aria-label="ย้อนกลับ">‹</button>
         <div className="fd-title"><span>หมายเลขโต๊ะ</span><strong>{tableLabel || "—"}</strong></div>

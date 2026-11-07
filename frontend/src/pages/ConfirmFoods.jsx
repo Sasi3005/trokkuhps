@@ -200,7 +200,7 @@ export default function ConfirmFoods() {
 
   /* ===================== UI (fd-* + แนวนอนกะทัดรัด) ===================== */
   return (
-    <div className="fd-page">
+    <div className="fd-page v2-order-review">
       {/* Topbar */}
       <header className="fd-topbar">
         <button

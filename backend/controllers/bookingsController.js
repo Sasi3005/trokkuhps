@@ -1,5 +1,6 @@
 "use strict";
 
+const QRCode = require("qrcode");
 const Bookings = require("../models/bookingsModel");
 const Tables   = require("../models/tableModel");
 
@@ -48,13 +49,20 @@ module.exports = {
       if (!name || !phone || !table_number || !date || !time)
         return res.status(400).json({ error: "missing fields" });
 
-      const slip = f ? { mime: f.mimetype, filename: f.originalname, size: f.size, buffer: f.buffer } : null;
-      const booking = await Bookings.create({ name, phone, table_number, start_at: `${date} ${time}`, zone, slip });
+      const table = typeof table_number === "string" && await Tables.getByNumber(table_number);
+      if (!table) return res.status(400).json({ error: "ไม่พบโต๊ะที่เลือก" });
 
-      try { await Tables.setStatusByNumber(table_number, "จองแล้ว"); } 
+      const qrUrl = new URL("/", req.get("origin"));
+      qrUrl.searchParams.set("bookingTable", table.table_number);
+      const qr_code = await QRCode.toDataURL(qrUrl.href, { width: 256 });
+
+      const slip = f ? { mime: f.mimetype, filename: f.originalname, size: f.size, buffer: f.buffer } : null;
+      const booking = await Bookings.create({ user_id: req.customer.user_id, name, phone, table_number: table.table_number, start_at: `${date} ${time}`, zone, slip });
+
+      try { await Tables.setStatusByNumber(table.table_number, "จองแล้ว"); } 
       catch(err) { console.error("Tables.setStatusByNumber error:", err); }
 
-      res.status(201).json({ message: "จองโต๊ะสำเร็จ", booking_id: booking.id });
+      res.status(201).json({ message: "จองโต๊ะสำเร็จ", booking_id: booking.id, table_number: table.table_number, qr_code });
     } catch (e) {
       res.status(500).json({ error: e.message });
     }

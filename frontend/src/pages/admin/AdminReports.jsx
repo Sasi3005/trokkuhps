@@ -124,6 +124,7 @@ export default function AdminReports() {
   const q = sp.get("q") || "";
 
   // active menu
+  const isTables = location.pathname.startsWith("/admin/tables");
   const isDashboard = location.pathname === "/admin";
   const isMenu = location.pathname.startsWith("/admin/menu");
   const isResv = location.pathname.startsWith("/admin/reservations"); // ปรับตามโปรเจกต์ได้
@@ -278,6 +279,7 @@ export default function AdminReports() {
     <div className="admin-layout">
       {/* Sidebar */}
       <aside className="ad-sidebar">
+        <div className="v2-workspace-brand"><b>trok<span>.</span></b><small>RESTAURANT WORKSPACE</small></div>
         <nav className="ad-nav">
           <NavItem
             icon={UserTableIcon}
@@ -309,6 +311,7 @@ export default function AdminReports() {
 
       {/* Main */}
       <main className="ad-main">
+        <div className="v2-admin-page-intro"><span>SALES ANALYTICS</span><p>TROK WORKSPACE <i>/</i> รายงานยอดขาย</p></div>
         <header className="ad-header">
           <div className="ad-profile">
             <div className="ad-avatar">

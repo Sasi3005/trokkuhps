@@ -113,7 +113,7 @@ export default function ConfirmSnacks() {
   };
 
   return (
-    <div className="fd-page">
+    <div className="fd-page v2-order-review">
       <header className="fd-topbar">
         <button
           type="button"

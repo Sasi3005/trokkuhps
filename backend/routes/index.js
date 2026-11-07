@@ -1,4 +1,3 @@
-// backend/routes/index.js
 "use strict";
 const express = require("express");
 const router = express.Router();
@@ -12,13 +11,13 @@ router.use("/drinks", require("./drinkRoutes"));
 router.use("/snacks", require("./snacksRoutes"));
 router.use("/main_dishes", require("./mainDishRoutes"));
 router.use("/drink_base_prices", require("./drinkBasePriceRoutes"));
-router.use("/bookings", require("./bookingsRoutes")); // 👈 เพิ่มไว้ตรงนี้
+router.use("/bookings", require("./bookingsRoutes"));
 router.use("/admins", require("./adminRoutes"));
+router.use("/auth", require("./customerAuthRoutes"));
 router.use("/metrics", require("./metricsRoutes"));
 router.use("/tables", require("./tableRoutes"));
 
-const reportsRoutes = require('./reportsRoutes');
+const reportsRoutes = require("./reportsRoutes");
 router.use("/reports", reportsRoutes);
-
 
 module.exports = router;

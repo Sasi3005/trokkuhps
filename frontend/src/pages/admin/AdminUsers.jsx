@@ -186,21 +186,24 @@ export default function AdminBookings() {
   return (
     <div className="admin-layout">
       <aside className="ad-sidebar">
+        <div className="v2-workspace-brand"><b>trok<span>.</span></b><small>RESTAURANT WORKSPACE</small></div>
         <div className="ad-brand">
           <div className="hamburger" aria-hidden />
           <div className="brand-text"></div>
         </div>
         <nav className="ad-nav">
-          <NavItem icon={DashIcon} label="Dashboard" active={isDashboard} onClick={() => navigate("/admin")} />
+          <NavItem icon={DashIcon} label="ภาพรวมร้าน" active={isDashboard} onClick={() => navigate("/admin")} />
           <NavItem icon={MenuIcon} label="จัดการเมนูอาหาร" active={isMenu} onClick={() => navigate("/admin/menu")} />
-          <NavItem icon={UsersIcon} label="จัดการจอง (Bookings)" active={isBookings} onClick={() => navigate("/admin/bookings")} />
-          <NavItem icon={TablesIcon} label="จัดการ Tables" active={isTable} onClick={() => navigate("/admin/tables")} />
+          <NavItem icon={UsersIcon} label="รายการจอง" active={isBookings} onClick={() => navigate("/admin/bookings")} />
+          <NavItem icon={TablesIcon} label="จัดการโต๊ะ" active={isTable} onClick={() => navigate("/admin/tables")} />
 
           <NavItem icon={LogoutIcon} label="ออกจากระบบ" onClick={logout} />
+          <button type="button" className={`ad-nav__item ${location.pathname === '/admin/reports' ? 'is-active' : ''}`} onClick={() => navigate('/admin/reports')}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M4 20h16M7 16v-5m5 5V5m5 11V8" /></svg><span>รายงานยอดขาย</span></button>
         </nav>
       </aside>
 
       <main className="ad-main">
+        <div className="v2-admin-page-intro"><span>RESERVATIONS</span><p>TROK WORKSPACE <i>/</i> รายการจอง</p></div>
         <header className="ad-header">
           <div className="ad-profile">
             <div className="ad-avatar">

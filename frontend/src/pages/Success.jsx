@@ -4,7 +4,7 @@ import "./Success.css";
 export default function Success() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { tableNo, zone, name, date, time, phone } = location.state || {};
+  const { tableNo, zone, name, date, time, phone, qrCode } = location.state || {};
   const missingState = !tableNo || !zone || !name || !date || !time || !phone;
 
   if (missingState) {
@@ -27,7 +27,7 @@ export default function Success() {
   return (
     <main className="success-page">
       <section className="success-card">
-        <div className="success-topline"><span className="success-eyebrow">TROK KU KPS · RESERVATION</span><span className="success-status"><i /> ยืนยันแล้ว</span></div>
+        <div className="success-topline"><span className="success-eyebrow">TROK KU KPS · RESERVATION</span><span className="success-status"><i /> บันทึกแล้ว</span></div>
         <div className="success-symbol" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="m8 16 5.2 5.2L24 10.8" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" /></svg></div>
         <h1>จองสำเร็จ!</h1>
         <p className="success-lead">ระบบบันทึกคำขอของคุณเรียบร้อยแล้ว</p>
@@ -37,6 +37,14 @@ export default function Success() {
           <span><small>โต๊ะที่จอง</small><strong>{tableNo}</strong><em>{zone}</em></span>
           <span className="success-table-check" aria-hidden="true">✓</span>
         </div>
+
+        {qrCode && (
+          <figure className="success-booking-qr">
+            <img src={qrCode} width="200" height="200" alt={`QR สำหรับโต๊ะ ${tableNo}`} />
+            <figcaption>สแกนจากหน้าแรกเพื่อดูเลขโต๊ะ</figcaption>
+            <a href={qrCode} download="booking-qr.png">ดาวน์โหลด QR</a>
+          </figure>
+        )}
 
         <section className="success-details" aria-label="รายละเอียดการจอง">
           <div className="success-details-heading"><span>BOOKING DETAILS</span><strong>รายละเอียดการจอง</strong></div>

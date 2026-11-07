@@ -129,7 +129,7 @@ export default function Foods(){
   };
 
   return (
-    <div className="fd-page">
+    <div className="fd-page v2-menu-page v2-menu-foods">
       <header className="fd-topbar" role="banner">
         <button className="fd-back" onClick={()=>navigate(qs ? "/"+qs : "/")} aria-label="ย้อนกลับ">‹</button>
         <div className="fd-title"><span>หมายเลขโต๊ะ</span><strong>{tableLabel || "—"}</strong></div>

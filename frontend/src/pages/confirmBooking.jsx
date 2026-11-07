@@ -188,14 +188,15 @@ export default function ConfirmBooking() {
       fd.append("time", form.time);
       fd.append("slip", form.slip);
 
-      const res = await fetch(`${API_BASE}/bookings`, { method: "POST", body: fd });
+      const res = await fetch(`${API_BASE}/bookings`, { method: "POST", credentials: "include", body: fd });
       const data = await res.json().catch(() => ({}));
 
-      if (!res.ok) throw new Error(data.error || `บันทึกล้มเหลว (HTTP ${res.status})`);
+      if (!res.ok) throw new Error(data.message || data.message || data.error || `บันทึกล้มเหลว (HTTP ${res.status})`);
 
       const payload = {
         booking_id: data.booking_id,
-        tableNo: rawTableNo,
+        tableNo: data.table_number,
+        qrCode: data.qr_code,
         zone: zoneDisplay,
         name: form.name,
         date: form.date,

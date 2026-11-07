@@ -30,14 +30,14 @@ const Bookings = {
       [id]
     ).then(([rows]) => rows[0] || null);
   },
-
-  create({ table_number, zone = "โซนในร้าน", name, phone, start_at, slip = null }) {
+  create({ user_id, table_number, zone = "โซนในร้าน", name, phone, start_at, slip = null }) {
     return db.query(
       `INSERT INTO bookings
-       (table_number, zone, name, phone, start_at,
+       (user_id, table_number, zone, name, phone, start_at,
         slip_mime, slip_filename, slip_size, slip_blob, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
       [
+        user_id,
         String(table_number),
         zone,
         name,

@@ -132,7 +132,7 @@ export default function ConfirmDrinks() {
 
   /* ---------- Render ---------- */
   return (
-    <div className="fd-page">
+    <div className="fd-page v2-order-review">
       <header className="fd-topbar">
         <button type="button" className="fd-back" onClick={() => navigate("/drinks")}>‹</button>
         <div className="fd-title">
