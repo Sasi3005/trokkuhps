@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useCustomerAuth } from "../auth/useCustomerAuth";
-import "./customerAuth.css";
+import "./CustomerAuth.css";
 
 export default function CustomerAuth({ mode = "login" }) {
   const isRegister = mode === "register";
